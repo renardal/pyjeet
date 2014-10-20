@@ -10,7 +10,6 @@
 import os
 import sys
 
-
 from log import Log
 
 
@@ -71,10 +70,10 @@ class File:
         max = timestamp + interval
         for line in self.raw:
             if not is_log:
-                self.data.append(normalizer.normalize({'raw': line[:-1] if not self.content else line}, debug_context))
+                self.data.append(normalizer.normalize({'raw': line[:-1] if not self.content else line}))
             else:
                 l = Log(self,
-                        normalizer.normalize({'raw': line[:-1] if not self.content else line}, debug_context))
+                        normalizer.normalize({'raw': line[:-1] if not self.content else line}))
                 if not l.date:
                     l.date = last_valid_time
                 else:

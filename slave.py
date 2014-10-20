@@ -76,12 +76,12 @@ class Slave:
     @staticmethod
     def _get_ip_link_show_path():
         # os.system('ip link show > ' + self.IPLINKSHOW_FILE)
-        return './test/ip_link_show'
+        return '/usr/share/logsparser/test/ip_link_show'
         # return self.IPLINKSHOW_FILE
 
     @staticmethod
     def _get_port_tab_path():
-        return './test/porttab'
+        return '/usr/share/logsparser/test/porttab'
 
     @staticmethod
     def interface_files():

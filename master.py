@@ -29,7 +29,7 @@ class Master:
     def __init__(self, args):
         self.args = args
         self.context = zmq.Context()
-        self.normalizer = LN('./normalizers')
+        self.normalizer = LN('/usr/share/normalizers')
         self.gui = None
         self.hosts = None
         self.port = self.args.port
