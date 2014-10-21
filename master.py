@@ -158,10 +158,10 @@ class Master:
             self.gui = Gui()
             #launch the load display thread
             try:
+                self.compute_num_logs()
                 t = threading.Thread(target=self.gui.loading, args=(self.normalized_logs, self.num_chunks, ))
                 t.start()
                 # normalize logs
-                self.compute_num_logs()
                 self.normalize()
                 # joining loading thread
                 main_thread = threading.currentThread()
@@ -187,7 +187,12 @@ class Master:
             for f in self.cl_support.files:
                 self.total_logs += sum(1 for l in f.raw)
                 f.raw.seek(0, 0)
-        self.normalized_logs[1] = max(self.total_logs/self.num_chunks, 1)
+        size_of_chunk = self.total_logs/self.num_chunks
+	if size_of_chunk == 0:
+	    self.normalized_logs[1] = 1
+	    self.num_chunks = self.total_logs
+	else:
+	    self.normalized_logs[1] = size_of_chunk
 
     def normalize(self):
         if self.hosts:
