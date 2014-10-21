@@ -102,7 +102,7 @@ class Master:
             raise Exception, 'Error: no host found in the speficied dotfile'
 
     def run(self):
-	pdb.set_trace()
+	#pdb.set_trace()
         self.build_topology()
         self.process_date_arg()
         self.select_files_and_interfaces()

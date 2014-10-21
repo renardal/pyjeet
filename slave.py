@@ -12,8 +12,8 @@ import rfc
 
 
 class Slave:
-    BASE_DIRECTORY = ''#'./log/'#'/var/log/pyjeet'
-    IPLINKSHOW_FILE = '/tmp/.pyjeet_ip_link_show'
+    BASE_DIRECTORY = ''
+    IPLINKSHOW_FILE = 'ip_link_show' 
 
     def __init__(self, args):
         self.args = args
@@ -75,13 +75,12 @@ class Slave:
 
     @staticmethod
     def _get_ip_link_show_path():
-        # os.system('ip link show > ' + self.IPLINKSHOW_FILE)
-        return '/usr/share/logsparser/test/ip_link_show'
-        # return self.IPLINKSHOW_FILE
+        os.system('ip link show > ' + Slave.IPLINKSHOW_FILE)
+        return Slave.IPLINKSHOW_FILE
 
     @staticmethod
     def _get_port_tab_path():
-        return '/usr/share/logsparser/test/porttab'
+	return '/var/lib/cumulus/porttab'
 
     @staticmethod
     def interface_files():
