@@ -16,6 +16,7 @@ from logsparser.lognormalizer import LogNormalizer as LN
 from clsupport import Clsupport
 from slave import Slave
 import threading
+import pdb
 
 
 def is_number(s):
@@ -101,13 +102,17 @@ class Master:
             raise Exception, 'Error: no host found in the speficied dotfile'
 
     def run(self):
+	pdb.set_trace()
         self.build_topology()
         self.process_date_arg()
         self.select_files_and_interfaces()
         self.normalize_logs()
         # by default display by host (cl-support considered as host)
         # overwritten by display by interface if valid interface list given
-        self.display_cb = self._display_hosts_history
+        if self.args.interfaces:
+            self.display_cb = self._display_interfaces_history
+        else:
+            self.display_cb = self._display_hosts_history
 
         if not self.is_master_ready():
             return 1
