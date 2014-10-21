@@ -187,7 +187,7 @@ class Master:
             for f in self.cl_support.files:
                 self.total_logs += sum(1 for l in f.raw)
                 f.raw.seek(0, 0)
-        self.normalized_logs[1] = self.total_logs/self.num_chunks
+        self.normalized_logs[1] = max(self.total_logs/self.num_chunks, 1)
 
     def normalize(self):
         if self.hosts:
