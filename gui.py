@@ -59,7 +59,7 @@ class Gui:
         (y, x) = self.window.getmaxyx()
         step = int(math.ceil(x/float(num_chunks)))
         while 42:
-            #self.window.addstr(10, 10, str(normalized_logs[2]))
+	    # python list is deadlock safe
             self.window.chgat(0, 0, normalized_logs[2]*step, curses.A_REVERSE)
             self.window.refresh()
             time.sleep(0.1)
@@ -149,7 +149,12 @@ class Gui:
         self.info.display()
         self.window.refresh()
 
-    def leave(self):
+    def leave(self, normalized_logs=None, num_chunks=None):
+        if normalized_logs:
+            # set normalized blocks to target to
+            # release loading thread
+            normalized_logs[2] = num_chunks
+	    self.catch_wating_thread()
         # Set everything back to normal
         self.window.keypad(0)
         curses.echo()

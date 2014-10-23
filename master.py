@@ -441,3 +441,6 @@ class Master:
         dir_path = os.getcwd() + "/pyjeet_temp"
         if os.path.exists(dir_path):
             os.system("rm -rf %s" % dir_path)
+	if self.gui:
+	    self.gui.leave(self.normalized_logs, self.num_chunks)
+        self.num_chunks = 50
