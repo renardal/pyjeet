@@ -316,7 +316,8 @@ class Master:
     @property
     def _get_interfaces_history(self):
         self.overhead = 3
-        content = ['Interface\'s history by host:']
+        self.gui.info.line_add('Interface\'s history by host:', (2, 0), "top-left", self.gui.window)
+        content = []
         for host in self.selected_hosts.values():
             content.append('[' + str(host.name) + '] ip=' + str(host.ip))
             for interface in host.selected_interfaces:
@@ -361,7 +362,8 @@ class Master:
     def _get_history(self, label, search_callback=None, *args):
         self.output_count = 0
         self.overhead = 2
-        content = label.split('*')
+        self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
+        content = []
         for host in self.selected_hosts.values():
             content.append('[' + str(host.name) + '] ip=' + str(host.ip))
             if not host.logs:
@@ -414,7 +416,8 @@ class Master:
 
     def _get_origin_file(self, label, log, host):
         highlight_number = None
-        content = label.split('*')
+        self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
+        content = []
         content.append('[' + str(host.name) + ']')
         if not log.context.root_file:
             content.append('\tNothing to display')
