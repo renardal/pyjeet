@@ -45,7 +45,7 @@ class Master:
         # used to save current state when user
         # wants to see log line in original file
         self.current_log_buffer = []
-        # number verbos lines above output
+        # number verbose lines above output
         self.overhead = 0
         # number of logs in database for loading bar
         self.total_logs = 0
@@ -315,31 +315,27 @@ class Master:
 
     @property
     def _get_interfaces_history(self):
-        self.overhead = 3
         self.gui.info.line_add('Interface\'s history by host:', (2, 0), "top-left", self.gui.window)
         content = []
         for host in self.selected_hosts.values():
-            content.append('[' + str(host.name) + '] ip=' + str(host.ip))
             for interface in host.selected_interfaces:
-                content.append('\t[' + str(interface.linux) + '/' + str(
-                    interface.sdk) + ']:')
+                if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
                 for line in host.logs:
                     if 'intf' in line.data.keys():
                         if line.data['intf'] in [interface.linux, interface.sdk]:
-                            content.append(self.__get_display_output_from_line(line))
+                            content.append(self.__get_display_output_from_line(str(host.name), line, if_name))
                             self.current_log_buffer.append([line, host])
         if self.cl_support:
-            content.append('[' + str(self.cl_support.name) + '] (cl-support)')
+            host_name = str(self.cl_support.name) + '(cl)'
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
             else:
                 for interface in self.cl_support.selected_interfaces:
-                    content.append('\t[' + str(interface.linux) + '/' + str(
-                        interface.sdk) + ']:')
+                    if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
                     for line in self.cl_support.logs:
                         if 'intf' in line.data.keys():
                             if line.data['intf'] in [interface.linux, interface.sdk]:
-                                content.append(self.__get_display_output_from_line(line, '(cl)'))
+                                content.append(self.__get_display_output_from_line(host_name, line, if_name))
                                 self.current_log_buffer.append([line, self.cl_support])
         return content
 
@@ -361,42 +357,40 @@ class Master:
 
     def _get_history(self, label, search_callback=None, *args):
         self.output_count = 0
-        self.overhead = 2
         self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
         content = []
         for host in self.selected_hosts.values():
-            content.append('[' + str(host.name) + '] ip=' + str(host.ip))
             if not host.logs:
                 content.append('\tNothing to display')
             else:
                 for line in host.logs:
                     if (search_callback and search_callback(line, *args)) or not search_callback:
-                        content.append(self.__get_display_output_from_line(line))
+                        content.append(self.__get_display_output_from_line(str(host.name), line))
                         self.current_log_buffer.append([line, host])
                         self.output_count += 1
                         if self.output_count >= 10000:
                             return content
         if self.cl_support:
-            content.append('[' + str(self.cl_support.name) + '] (cl-support)')
+            host_name = str(self.cl_support.name) + '(cl)'
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
             else:
                 for line in self.cl_support.logs:
                     if (search_callback and search_callback(line, *args)) or not search_callback:
-                        content.append(self.__get_display_output_from_line(line, '(cl)'))
+                        content.append(self.__get_display_output_from_line(host_name, line))
                         self.current_log_buffer.append([line, self.cl_support])
                         self.output_count += 1
                         if self.output_count >= 10000:
                             return content
         return content
 
-    def __get_display_output_from_line(self, line, placeholder=''):
+    def __get_display_output_from_line(self, host_name, line, interface=''):
         if not self.verbose:
-            output = ('\t[' + str(line.date) + '] ' + (
+            output = ('[' + str(line.date) + '] ' + (
                 line.message.body if line.message.body else line.message.raw))
         else:
-            output = ('\t[' + str(line.verbose_date() if line.verbose_date() else line.date) + ']' +
-                            ' [' + str(line.context.logfile).split('/')[-1] + placeholder + '] ' +
+            output = ('[' + str(host_name) + ']' + interface + ' [' + str(line.verbose_date() if line.verbose_date() else line.date) + ']' +
+                            ' [' + str(line.context.logfile).split('/')[-1] + '] ' +
                             (line.message.body if line.message.body else line.message.raw))
         try:
             output.encode('utf-8')
@@ -418,12 +412,11 @@ class Master:
         highlight_number = None
         self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
         content = []
-        content.append('[' + str(host.name) + ']')
         if not log.context.root_file:
             content.append('\tNothing to display')
         else:
             for line in log.context.root_file.data:
-                content.append(self.__get_display_output_from_line(line))
+                content.append(self.__get_display_output_from_line(str(host.name), line))
                 if line == log:
                     highlight_number = content.__len__() - 1
             if not highlight_number:
