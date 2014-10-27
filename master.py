@@ -17,6 +17,7 @@ from clsupport import Clsupport
 from slave import Slave
 import threading
 import pdb
+import glob
 
 
 def is_number(s):
@@ -143,11 +144,34 @@ class Master:
                 self.interval = self.args.interval
 
     def select_files_and_interfaces(self):
-        #setting the standalone or giving only localhost as host are equivalent
-        if self.args.standalone:
+        #setting the standalone or giving only localhost as or no host are equivalent
+        if self.args.standalone or not self.args.hosts:
             self.args.hosts = ['localhost']
         if self.args.hosts == ['localhost']:
             self.args.standalone = True
+        # if no file is specified select all files in /var/log/ on localhost
+        if not self.args.files:
+            self.args.files = glob.glob("/var/log/*.log")
+            for i in range(len(self.args.files)):
+                self.args.files[i] = "localhost:" + self.args.files[i]
+        # if we get a folder we add all files inside it to file list with corresponding host
+        if self.args.folders:
+            for f in self.args.folders:
+                f = f.split(':')
+                if len(f) == 2:
+                    host = f[0]
+                    if f[1][-1] != '/': f[1]+='/'
+                    files = glob.glob(f[1]+"*.log")
+                    for i in range(len(files)):
+                        files[i] = host + ":" + files[i]
+                elif len(f) == 1:
+                    if f[0][-1] != '/': f[0]+='/'
+                    files = glob.glob(f[0]+"*.log")
+                else:
+                    print "Error in formatting of folders names"
+                    sys.exit(1)
+                self.args.files += files
+                    
         if self.args.hosts:
             self.set_selected_hosts(self.args.hosts)
             self.set_selected_files_for_hosts(self.args.files, self.args.unzip, self.args.standalone)
