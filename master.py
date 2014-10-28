@@ -456,7 +456,10 @@ class Master:
         else:
             display = LogHistory
             content = self._get_history('History by host:')
-        return Output(display).fill_content_from_strings(content).set_highlighted_line(highlight)
+        if len(content) >= 1:
+            return Output(display).fill_content_from_strings(content).set_highlighted_line(highlight)
+        else:
+            return None
 
     def clean(self):
         if self.cl_support:

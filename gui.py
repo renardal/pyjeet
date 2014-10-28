@@ -82,6 +82,7 @@ class Gui:
 
             while 42:
                 self.display_basics()
+                self.display_status(output)
                 if not output:
                     result = self.start_on_menu()
                 else:
@@ -100,6 +101,14 @@ class Gui:
         finally:
             self.leave()
 
+    def display_status(self, output):
+        if output:
+            self.info.line_add("%d lines to display" % len(output.content), (3, 0), "top-left", self.window)
+            self.info.display()
+        else:
+            self.info.line_add("Nothing to display", (3, 0), "top-left", self.window)
+            self.info.display()
+        
     def launch_waiting_thread(self):
         try:
             t = threading.Thread(target=self.wait_display)
