@@ -53,6 +53,8 @@ class Master:
         # count number lines going to be sent
         # so that it does not exceed limit (useless computation)
         self.output_count = 0
+        # max number of lines
+        self.cap = 10000
 
     def timestamp_from_datestr(self, date):
         time_str = {'raw': date}  # a LogNormalizer expects input as a dictionary
@@ -119,7 +121,7 @@ class Master:
         if self.gui:
             output = None
             while 42:
-                req = self.gui.run(output)
+                req = self.gui.run(output, self.cap)
                 # thread to not go back to shell while processing
                 # only cosmetics
                 self.gui.launch_waiting_thread()
@@ -369,7 +371,7 @@ class Master:
                         content.append(self.__get_display_output_from_line(str(host.name), line))
                         self.current_log_buffer.append([line, host])
                         self.output_count += 1
-                        if self.output_count >= 10000:
+                        if self.output_count >= self.cap:
                             return content
         if self.cl_support:
             host_name = str(self.cl_support.name) + '(cl)'
@@ -381,7 +383,7 @@ class Master:
                         content.append(self.__get_display_output_from_line(host_name, line))
                         self.current_log_buffer.append([line, self.cl_support])
                         self.output_count += 1
-                        if self.output_count >= 10000:
+                        if self.output_count >= self.cap:
                             return content
         return content
 

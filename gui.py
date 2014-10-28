@@ -67,7 +67,7 @@ class Gui:
                 self.window.chgat(0, 0, curses.A_NORMAL)
                 return
 
-    def run(self, output):
+    def run(self, output, cap):
         try:
             self.catch_wating_thread()
             # Turn off echoing of keys, and enter cbreak mode,
@@ -86,7 +86,7 @@ class Gui:
                 if not output:
                     result = self.start_on_menu()
                 else:
-                    self.set_display_body(output)
+                    self.set_display_body(output, cap)
                     # wait for user input
                     c = self.window.getch()
                     #Escape Key
@@ -127,12 +127,12 @@ class Gui:
     def wait_display(self):
         self.window.refresh()
 
-    def set_display_body(self, output):
+    def set_display_body(self, output, cap):
         if not self.body:
-            self.body = output.display(self.window, self.info, output.content)
+            self.body = output.display(self.window, self.info, output.content, cap)
         elif isinstance(self.body, LogHistory) and output.display == OriginFile:
             self.buffer_body = self.body
-            self.body = output.display(self.window, self.info, output.content, output.highlighted_line)
+            self.body = output.display(self.window, self.info, output.content, cap, output.highlighted_line)
         self.body.show_cursor()
         self.body.refresh_pad()
 
@@ -396,10 +396,10 @@ class Field:
 class Body:
     __metaclass__ = ABCMeta
 
-    def __init__(self, window, info, output, highlight=None):
+    def __init__(self, window, info, output, cap, highlight=None):
         self.window = window
         # cap the number of lines in output to 10000
-        self.output = output[:10000]
+        self.output = output[:cap]
          # Terminal dimensions
         (self.Y, self.X) = window.getmaxyx()
         # Portion of terminal used for display
@@ -462,8 +462,8 @@ class Body:
 
 
 class LogHistory(Body):
-    def __init__(self, window, info, output):
-        Body.__init__(self, window, info, output)
+    def __init__(self, window, info, output, cap):
+        Body.__init__(self, window, info, output, cap)
         #  Displays first page
         self.display_first_page()
 
@@ -569,8 +569,8 @@ class LogHistory(Body):
 
 
 class OriginFile(Body):
-    def __init__(self, window, info, output, highlight):
-        Body.__init__(self, window, info, output, highlight)
+    def __init__(self, window, info, output, cap, highlight):
+        Body.__init__(self, window, info, output, cap, highlight)
         #  Displays first page
         self.display_original_page()
 
