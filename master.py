@@ -145,7 +145,7 @@ class Master:
         #setting the standalone or giving only localhost as or no host are equivalent
         if self.args.standalone or not self.args.hosts:
             self.args.hosts = ['localhost']
-        if self.args.hosts == ['localhost']:
+        if self.args.hosts == ['localhost'] or not self.args.hosts:
             self.args.standalone = True
         # if no file is specified select all files in /var/log/ on localhost
         if not self.args.files:
@@ -215,11 +215,14 @@ class Master:
                 self.total_logs += sum(1 for l in f.raw)
                 f.raw.seek(0, 0)
         size_of_chunk = self.total_logs/self.num_chunks
-	if size_of_chunk == 0:
-	    self.normalized_logs[1] = 1
-	    self.num_chunks = self.total_logs
-	else:
-	    self.normalized_logs[1] = size_of_chunk
+        if size_of_chunk == 0:
+            self.normalized_logs[1] = 1
+            if self.total_logs > 0:
+                self.num_chunks = self.total_logs
+            else:
+                sys.exit(1)
+        else:
+            self.normalized_logs[1] = size_of_chunk
 
     def normalize(self):
         if self.hosts:
