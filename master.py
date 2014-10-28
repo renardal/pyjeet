@@ -45,8 +45,6 @@ class Master:
         # used to save current state when user
         # wants to see log line in original file
         self.current_log_buffer = []
-        # number verbose lines above output
-        self.overhead = 0
         # number of logs in database for loading bar
         self.total_logs = 0
         # [number of normalized logs, size of chunk, current chunk]
@@ -384,12 +382,13 @@ class Master:
                             return content
         return content
 
-    def __get_display_output_from_line(self, host_name, line, interface=''):
+    def __get_display_output_from_line(self, host_name, line, interface='', line_number=''):
         if not self.verbose:
             output = ('[' + str(line.date) + '] ' + (
                 line.message.body if line.message.body else line.message.raw))
         else:
-            output = ('[' + str(host_name) + ']' + interface + ' [' + str(line.verbose_date() if line.verbose_date() else line.date) + ']' +
+            output = (line_number + '[' + str(host_name) + ']' + interface + ' [' +
+                              str(line.verbose_date() if line.verbose_date() else line.date) + ']' +
                             ' [' + str(line.context.logfile).split('/')[-1] + '] ' +
                             (line.message.body if line.message.body else line.message.raw))
         try:
@@ -415,12 +414,14 @@ class Master:
         if not log.context.root_file:
             content.append('\tNothing to display')
         else:
-            for line in log.context.root_file.data:
-                content.append(self.__get_display_output_from_line(str(host.name), line))
+            for (i, line) in enumerate(log.context.root_file.data):
+                line_number = "[l%d] " % i
+                content.append(self.__get_display_output_from_line(str(host.name), line,'',line_number))
                 if line == log:
                     highlight_number = content.__len__() - 1
             if not highlight_number:
                 raise ValueError("Provided log not found in original file")
+                sys.exit(1)
             else:
                 return content, highlight_number
 
@@ -446,8 +447,8 @@ class Master:
         elif req.line_number:
             # see log line in its original file
             display = OriginFile
-            log = self.current_log_buffer[req.line_number - self.overhead][0]
-            host = self.current_log_buffer[req.line_number - self.overhead][1]
+            log = self.current_log_buffer[req.line_number][0]
+            host = self.current_log_buffer[req.line_number][1]
             content, highlight = self._get_origin_file('Log line in its original File:', log, host)
         else:
             display = LogHistory
