@@ -447,7 +447,7 @@ class Master:
             else:
                 display = LogHistory
                 content = self._get_history('History by host:')
-        elif req.line_number:
+        elif req.line_number >= 0:
             # see log line in its original file
             display = OriginFile
             log = self.current_log_buffer[req.line_number][0]

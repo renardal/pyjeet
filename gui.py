@@ -655,8 +655,3 @@ class OriginFile(Body):
                 pass
         except curses.error:
             return
-
-
-
-
-
