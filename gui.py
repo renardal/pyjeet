@@ -102,6 +102,8 @@ class Gui:
             self.leave()
 
     def display_status(self, output):
+        self.window.move(3, 0)
+        self.window.clrtoeol()
         if output:
             self.info.line_add("%d lines to display" % len(output.content), (3, 0), "top-left", self.window)
             self.info.display()
@@ -469,6 +471,9 @@ class LogHistory(Body):
 
     def display_first_page(self):
         #User info
+        (y, x) = self.window.getmaxyx()
+        self.window.move(y - self.info_y, 0)
+        self.window.clrtoeol()
         info_line = "* %d more lines - press the space bar to display more *" % max((self.num_lines - self.body_h), 0)
         self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
         self.info.display()
@@ -540,6 +545,9 @@ class LogHistory(Body):
             else:
                 info_line = "* %d more lines - press the space bar to display more *" \
                     % (self.num_lines - self.top - self.body_h)
+            (y, x) = self.window.getmaxyx()
+            self.window.move(y - self.info_y, 0)
+            self.window.clrtoeol()
             self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
             self.info.display()
         except curses.error:
@@ -588,6 +596,9 @@ class OriginFile(Body):
         else:
             info_line = "* %d more lines till end of origin file - press the space bar to display more *" \
                 % (self.num_lines - self.top - self.body_h)
+        (y, x) = self.window.getmaxyx()
+        self.window.move(y - self.info_y, 0)
+        self.window.clrtoeol()
         self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
         self.info.display()
         # pad for log lines
@@ -627,6 +638,9 @@ class OriginFile(Body):
             else:
                 info_line = "* %d more lines - press the space bar to display more *" \
                     % (self.num_lines - self.top - self.body_h)
+            (y, x) = self.window.getmaxyx()
+            self.window.move(y - self.info_y, 0)
+            self.window.clrtoeol()
             self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
             self.info.display()
         except curses.error:
