@@ -82,8 +82,8 @@ class File:
                     self.data.append(l)
             if normalized_logs:
                 # increase current number of normalized logs
-                normalized_logs[0] += 1
+                normalized_logs['number'] += 1
                 # increase chunk counter if needed, seen by load display thread
-                if normalized_logs[0] % normalized_logs[1] == 0:
-                    normalized_logs[2] += 1
+                if normalized_logs['number'] % normalized_logs['chunk_size'] == 0:
+                    normalized_logs['current_chunk'] += 1
         return self

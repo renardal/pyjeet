@@ -60,10 +60,10 @@ class Gui:
         step = int(math.ceil(x/float(num_chunks)))
         while 42:
 	    # python list is deadlock safe
-            self.window.chgat(0, 0, normalized_logs[2]*step, curses.A_REVERSE)
+            self.window.chgat(0, 0, normalized_logs['current_chunk']*step, curses.A_REVERSE)
             self.window.refresh()
             time.sleep(0.1)
-            if normalized_logs[2] >= num_chunks:
+            if normalized_logs['current_chunk'] >= num_chunks:
                 self.window.chgat(0, 0, curses.A_NORMAL)
                 return
 
@@ -162,7 +162,7 @@ class Gui:
         if normalized_logs:
             # set normalized blocks to target to
             # release loading thread
-            normalized_logs[2] = num_chunks
+            normalized_logs['current_chunk'] = num_chunks
 	    self.catch_wating_thread()
         # Set everything back to normal
         self.window.keypad(0)

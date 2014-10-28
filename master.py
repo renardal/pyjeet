@@ -47,8 +47,7 @@ class Master:
         self.current_log_buffer = []
         # number of logs in database for loading bar
         self.total_logs = 0
-        # [number of normalized logs, size of chunk, current chunk]
-        self.normalized_logs = [0, 0, 0]
+        self.normalized_logs = {'number': 0, 'chunk_size': 0, 'current_chunk': 0}
         self.num_chunks = 50
         # count number lines going to be sent
         # so that it does not exceed limit (useless computation)
@@ -198,7 +197,7 @@ class Master:
                     if t is not main_thread:
                         t.join()
             except (KeyboardInterrupt, SystemExit):
-                self.normalized_logs[2] = self.num_chunks
+                self.normalized_logs['current_chunk'] = self.num_chunks
                 self.gui.leave()
                 sys.exit()
         else:
@@ -218,13 +217,13 @@ class Master:
                 f.raw.seek(0, 0)
         size_of_chunk = self.total_logs/self.num_chunks
         if size_of_chunk == 0:
-            self.normalized_logs[1] = 1
+            self.normalized_logs['chunk_size'] = 1
             if self.total_logs > 0:
                 self.num_chunks = self.total_logs
             else:
                 sys.exit(1)
         else:
-            self.normalized_logs[1] = size_of_chunk
+            self.normalized_logs['chunk_size'] = size_of_chunk
 
     def normalize(self):
         if self.hosts:
