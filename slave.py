@@ -14,6 +14,7 @@ import rfc
 class Slave:
     BASE_DIRECTORY = ''
     IPLINKSHOW_FILE = 'ip_link_show' 
+    BRCTLSHOW_FILE = 'brctl show'
 
     def __init__(self, args):
         self.args = args
@@ -24,6 +25,7 @@ class Slave:
             {
                 'get_files': self._get_files,
                 'get_interfaces_files': self._get_interfaces_files,
+                'get_bridges_files': self._get_bridges_files,
             }
 
     def run(self):
@@ -79,15 +81,27 @@ class Slave:
         return Slave.IPLINKSHOW_FILE
 
     @staticmethod
+    def _get_brctl_path():
+        os.system('brctl show > ' + Slave.BRCTLSHOW_FILE)
+        return Slave.BRCTLSHOW_FILE
+
+    @staticmethod
     def _get_port_tab_path():
-	return '/var/lib/cumulus/porttab'
+        return '/var/lib/cumulus/porttab'
 
     @staticmethod
     def interface_files():
         return [Slave._get_ip_link_show_path(), Slave._get_port_tab_path()]
 
+    @staticmethod
+    def bridges_files():
+        return [Slave._get_brctl_path()]
+
     def _get_interfaces_files(self, arg):
         return self._get_files(self.interface_files(), False)
+
+    def _get_bridges_files(self, arg):
+        return self._get_files(self.bridges_files(), False)
 
     def clean(self):
         pass

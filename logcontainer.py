@@ -46,6 +46,17 @@ class LogContainer:
                     self.interfaces.append(Interface(data))
         return self
 
+    def load_bridges(self, normalizer, standalone):
+        #loads all bridges from brctl conf files
+        files_info = self.get_bridges_files(standalone)
+        for info in files_info:
+            for data in File(info['name'], info['content']).normalize(normalizer, is_log=False,debug_context=True).data:
+                if not data.has_key('linux_interface'):
+                    continue
+                if not self.find_interface(data):
+                    self.interfaces.append(Interface(data))
+        return self
+
     def find_interface(self, data):
         for interface in self.interfaces:
             linux = data.get('linux_interface')
