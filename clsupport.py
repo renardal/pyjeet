@@ -15,19 +15,19 @@ class Clsupport(LogContainer):
         self.path_to_archive = path_to_archive
         self.path_to_untar = None
         self.name = None
-
-        self.untar()
         self._get_name_from_path()
+        self.untar()
 
     def _get_name_from_path(self):
         if "cl_support__" not in self.path_to_archive:
             raise ValueError("The given path does not point to a cl-support archive: %s" % self.path_to_archive)
         else:
             self.name = self.path_to_archive.split('/')[-1].split('_')[3] + '(cls)'
-            self.path_to_untar = "./" + self.path_to_archive.split('/')[-1].split('.')[0]
+            self.path_to_untar = self.path_to_archive.split('.')[0]
+            self.parent_path = '/'.join(self.path_to_untar.split('/')[:-1])
 
     def untar(self):
-        os.system("tar -zxf %s" % self.path_to_archive)
+        os.system("tar -xf %(arch)s -C %(parent)s" % {'arch':self.path_to_archive, 'parent':self.parent_path})
 
     def get_interfaces_files(self, standalone):
         #get files from untared archive in config folder

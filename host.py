@@ -77,6 +77,23 @@ class Host(LogContainer):
                 files.append({'name': if_file, 'content': open(if_file, 'r')})
             return files
 
+    def get_bridges_file(self, standalone):
+        files = []
+        if not standalone:
+            if self.client:
+                self.client.send_json(rfc.create_request('get_bridges_files', None))
+                res = self.client.recv_json()
+                if res and res['success']:
+                    for key in res['result']:
+                        if not res['result'][key].has_key('error'):
+                            files.append({'name': key, 'content': res['result'][key]['content']})
+            return files
+        else:
+            #if standalone no Slave but make use of slave static functions
+            for bridge_file in Slave.bridges_files():
+                files.append({'name': bridge_file, 'content': open(bridge_file, 'r')})
+            return files
+
     def get_users(self):
         for u in ['root', ]:  # download users list
             self.users[u] = User(u)

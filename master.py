@@ -102,7 +102,8 @@ class Master:
             raise Exception, 'Error: no host found in the speficied dotfile'
 
     def run(self):
-	#pdb.set_trace()
+        # uncommnent next line to use debugging
+        # pdb.set_trace()
         self.build_topology()
         self.process_date_arg()
         self.select_files_and_interfaces()
@@ -143,17 +144,22 @@ class Master:
                 self.interval = self.args.interval
 
     def select_files_and_interfaces(self):
-        #setting the standalone or giving only localhost as or no host are equivalent
-        if self.args.standalone or not self.args.hosts:
+        #setting the standalone or giving only localhost are equivalent
+        if self.args.standalone:
             self.args.hosts = ['localhost']
-        if self.args.hosts == ['localhost'] or not self.args.hosts:
+        if self.args.hosts == ['localhost']:
             self.args.standalone = True
         # if no file is specified select all files in /var/log/ on localhost
-        if not self.args.files:
+        if not self.args.files and not self.cl_support_archive:
             self.args.files = glob.glob("/var/log/*.log")
             for i in range(len(self.args.files)):
                 self.args.files[i] = "localhost:" + self.args.files[i]
+            #else:
+            #untar_log = "./" + self.path_to_archive.split('/')[1].split('.')[0]
+
         # if we get a folder we add all files inside it to file list with corresponding host
+        #
+        # /!\ not OK need to be fixed, has to ask Slave for remote glob of folder
         if self.args.folders:
             for f in self.args.folders:
                 f = f.split(':')
@@ -170,7 +176,7 @@ class Master:
                     print "Error in formatting of folders names"
                     sys.exit(1)
                 self.args.files += files
-                    
+
         if self.args.hosts:
             self.set_selected_hosts(self.args.hosts)
             self.set_selected_files_for_hosts(self.args.files, self.args.unzip, self.args.standalone)
@@ -256,6 +262,13 @@ class Master:
             host.set_files(self._get_list_for_host(None, host.name, files), unzip, standalone)
 
     def set_selected_files_for_clsupport(self, file_list, unzip):
+        if not file_list:
+            file_list = glob.glob(self.cl_support.path_to_untar + "/var/log/*.log")
+            file_list = [f.split('/')[-1] for f in file_list]
+            #print file_list
+            #print self.cl_support.path_to_untar
+            #print
+            #sys.exit(0)
         files = [f.split(':') for f in file_list if f]
         self.cl_support.set_files(self._get_list_for_clsupport(files), unzip)
 
@@ -290,6 +303,8 @@ class Master:
                 else:
                     res.append(elem[1])
             else:
+                # when file does not belong to particular
+                # host it is added everywhere
                 res.append(elem[0])
         return res
 
@@ -328,7 +343,7 @@ class Master:
                             content.append(self.__get_display_output_from_line(str(host.name), line, if_name))
                             self.current_log_buffer.append([line, host])
         if self.cl_support:
-            host_name = str(self.cl_support.name) + '(cl)'
+            host_name = str(self.cl_support.name)
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
             else:
@@ -373,7 +388,7 @@ class Master:
                         if self.output_count >= self.cap:
                             return content
         if self.cl_support:
-            host_name = str(self.cl_support.name) + '(cl)'
+            host_name = str(self.cl_support.name)
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
             else:
