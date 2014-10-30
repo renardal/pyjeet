@@ -35,7 +35,7 @@ class LogContainer:
         else:
             self.selected_interfaces = self.get_interfaces_from_names(selected_interfaces)
 
-    def load_interfaces(self, normalizer, standalone):
+    def load_interfaces(self, normalizer, standalone=False):
         #loads all interfaces from interface conf files
         files_info = self.get_interfaces_files(standalone)
         for info in files_info:

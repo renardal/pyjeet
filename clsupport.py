@@ -31,7 +31,11 @@ class Clsupport(LogContainer):
 
     def get_interfaces_files(self, standalone):
         #get files from untared archive in config folder
-        files = [{'name': self.path_to_untar + "/support/porttab", 'content': None}]
+        porttab = self.path_to_untar + "/support/porttab"
+        files = [{'name': porttab, 'content': open(porttab, 'r')}]
+        #print files
+        #print
+        #sys.exit(0)
         return files
 
     def set_files(self, selected_files, unzip):

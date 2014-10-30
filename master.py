@@ -184,8 +184,8 @@ class Master:
 
         if self.cl_support_archive:
             self.cl_support = Clsupport(self.cl_support_archive)
-            self.set_selected_interfaces_for_clsupport(self.args.interfaces)
             self.set_selected_files_for_clsupport(self.args.files, self.args.unzip)
+            self.set_selected_interfaces_for_clsupport(self.args.interfaces)
 
     def normalize_logs(self):
         if self.args.gui:
@@ -265,10 +265,6 @@ class Master:
         if not file_list:
             file_list = glob.glob(self.cl_support.path_to_untar + "/var/log/*.log")
             file_list = [f.split('/')[-1] for f in file_list]
-            #print file_list
-            #print self.cl_support.path_to_untar
-            #print
-            #sys.exit(0)
         files = [f.split(':') for f in file_list if f]
         self.cl_support.set_files(self._get_list_for_clsupport(files), unzip)
 
@@ -452,6 +448,8 @@ class Master:
             display = LogHistory
             if req.field.name == "interface":
                 self.set_selected_interfaces_for_hosts(req.field.input.split(), self.args.standalone)
+                if self.cl_support_archive:
+                    self.set_selected_interfaces_for_clsupport(req.field.input.split())
                 content = self._get_interfaces_history
             elif req.field.name == "grep":
                 content = self._get_history('History of grep pattern by host:', self._get_grep_history, req.field.input)
