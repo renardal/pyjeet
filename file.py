@@ -17,8 +17,10 @@ class File:
     def __init__(self, path, content=None, rotate=False):
         self.path = path
         self.data = []
+        self.max_rotation = 10
         tmp = self.path.split('/')
         self.name = tmp[len(tmp) - 1]
+        self.dir_path = "/var/log/pyjeet_temp"
         self.content = content is not None
         self.raw = None
         self._get_file_content(content, rotate)
@@ -36,26 +38,38 @@ class File:
             else:
                 print "Unzipping archived logs..."
                 filenames = self._get_rotated_files()
-                dir_path = os.getcwd() + "/pyjeet_temp"
-                if not os.path.exists(dir_path):
-                    os.makedirs(dir_path)
-                with open(dir_path + "/" + self.name, 'w') as outfile:
+                if not os.path.exists(self.dir_path):
+                    os.makedirs(self.dir_path)
+                with open(self.dir_path + "/" + self.name, 'w') as outfile:
                     #reversed because the highest number is the oldest log file
                     for fname in reversed(filenames):
                         with open(fname) as infile:
                             for line in infile:
                                 outfile.write(line)
-                self.raw = open(dir_path + "/" + self.name, 'r')
+                try:
+                    self.raw = open(self.dir_path + "/" + self.name, 'r')
+                except IOError as e:
+                    print self.path + ': ' + e.strerror
+                    sys.exit(0)
 
     def _get_rotated_files(self):
         rotation = 1
-        rotated_files = []
-        while os.path.isfile(self.path + '.' + str(rotation) + '.gz'):
-            path_to_archive = self.path + '.' + str(rotation) + '.gz'
-            os.system("gzip -d %s" % path_to_archive)
-            rotated_files.append(self.path + '.' + str(rotation))
+        rotated_files = [self.path]
+        while rotation <= self.max_rotation: 
+            path_to_unarchived = self.path + '.' + str(rotation)
+            path_to_archive = path_to_unarchived + '.gz'
+            if os.path.isfile(path_to_archive):
+                archive_name = '.'.join(path_to_archive.split('/')[-1].split('.')[:-1]) 
+                output_path = str(self.dir_path + '/' + archive_name)
+                os.system("gunzip -c %(input)s > %(output)s" % {'input':path_to_archive, 'output':output_path})
+                rotated_files.append(output_path)
+            # sometimes you find non compressed rotated log
+            elif os.path.isfile(path_to_unarchived):
+                archive_name = path_to_unarchived.split('/')[-1] 
+                output_path = str(self.dir_path + '/' + archive_name)
+                os.system("cp %(input)s  %(output)s" % {'input':path_to_unarchived, 'output':output_path})
+                rotated_files.append(output_path)
             rotation += 1
-        print self.path + '.' + str(rotation) + '.gz'
         return rotated_files
 
     def get_file_name(self):

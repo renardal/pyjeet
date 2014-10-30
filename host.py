@@ -40,6 +40,7 @@ class Host(LogContainer):
 
     def set_files(self, selected_files, unzip, standalone):
         if not standalone:
+            # /!\ why forward unzip in remote?
             files_content = self._get_files_content(selected_files)
             if files_content:
                 for filename in files_content:
@@ -49,10 +50,11 @@ class Host(LogContainer):
                         self.files.append(File(filename, files_content[filename]['content'], unzip))
         else:
             for filename in selected_files:
-                if '..' in filename or not filename.endswith('log'):
+                # some log files do not end with .log find another mechanism
+                if '..' in filename: #or not filename.endswith('log'):
                     print '[' + self.name + '] Error: ' + filename + ': Non-authorized file.'
                 else:
-                    self.files.append(File(filename))
+                    self.files.append(File(filename, None, unzip))
 
     def _get_files_content(self, info):
         self.client.send_json(rfc.create_request('get_files', info))

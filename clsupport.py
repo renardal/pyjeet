@@ -33,9 +33,6 @@ class Clsupport(LogContainer):
         #get files from untared archive in config folder
         porttab = self.path_to_untar + "/support/porttab"
         files = [{'name': porttab, 'content': open(porttab, 'r')}]
-        #print files
-        #print
-        #sys.exit(0)
         return files
 
     def set_files(self, selected_files, unzip):

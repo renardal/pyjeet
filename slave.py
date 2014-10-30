@@ -54,7 +54,7 @@ class Slave:
             os.path.walk(self.BASE_DIRECTORY, self._get_files_list, files)
         result = {}
         for filename in files:
-            if '..' in filename or (from_base_dir and not filename.endswith('log')):
+            if '..' in filename: # or (from_base_dir and not filename.endswith('log')):
                 result[filename] = {'error': 'Non-authorized file.'}
             else:
                 print 'GET/ %s' % filename

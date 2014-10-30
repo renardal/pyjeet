@@ -154,8 +154,6 @@ class Master:
             self.args.files = glob.glob("/var/log/*.log")
             for i in range(len(self.args.files)):
                 self.args.files[i] = "localhost:" + self.args.files[i]
-            #else:
-            #untar_log = "./" + self.path_to_archive.split('/')[1].split('.')[0]
 
         # if we get a folder we add all files inside it to file list with corresponding host
         #
@@ -203,6 +201,7 @@ class Master:
                     if t is not main_thread:
                         t.join()
             except (KeyboardInterrupt, SystemExit):
+                print "Error or interrupt while normalizing logs"
                 self.normalized_logs['current_chunk'] = self.num_chunks
                 self.gui.leave()
                 sys.exit()
@@ -227,6 +226,7 @@ class Master:
             if self.total_logs > 0:
                 self.num_chunks = self.total_logs
             else:
+                print "No logs were normalized"
                 sys.exit(1)
         else:
             self.normalized_logs['chunk_size'] = size_of_chunk
@@ -435,7 +435,7 @@ class Master:
                 if line == log:
                     highlight_number = content.__len__() - 1
             if not highlight_number:
-                raise ValueError("Provided log not found in original file")
+                print "Provided log not found in original file"
                 sys.exit(1)
             else:
                 return content, highlight_number
@@ -479,7 +479,7 @@ class Master:
         if self.cl_support:
             self.cl_support.clean()
         #clean temp directory
-        dir_path = os.getcwd() + "/pyjeet_temp"
+        dir_path = "/var/log/pyjeet_temp"
         if os.path.exists(dir_path):
             os.system("rm -rf %s" % dir_path)
 	if self.gui:

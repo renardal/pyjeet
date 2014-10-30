@@ -116,6 +116,7 @@ class Gui:
             t = threading.Thread(target=self.wait_display)
             t.start()
         except (KeyboardInterrupt, SystemExit):
+            print "Error when launching waiting thread"
             sys.exit()
 
     @staticmethod
@@ -330,6 +331,7 @@ class Menu:
 
     @staticmethod
     def _key_escape():
+        print "User quit application pressing ESC"
         sys.exit(0)
 
     def _key_backspace(self):
