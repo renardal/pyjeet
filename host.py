@@ -10,6 +10,8 @@ import zmq
 import rfc
 from logcontainer import *
 from slave import Slave
+import logging
+logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 
 class User:
@@ -45,14 +47,14 @@ class Host(LogContainer):
             if files_content:
                 for filename in files_content:
                     if files_content[filename].has_key('error'):
-                        print '[' + self.name + '] Error: ' + filename + ': ' + files_content[filename]['error']
+                        logging.warn('[' + self.name + '] Error: ' + filename + ': ' + files_content[filename]['error'])
                     else:
                         self.files.append(File(filename, files_content[filename]['content'], unzip))
         else:
             for filename in selected_files:
                 # some log files do not end with .log find another mechanism
                 if '..' in filename: #or not filename.endswith('log'):
-                    print '[' + self.name + '] Error: ' + filename + ': Non-authorized file.'
+                    logging.warn('[' + self.name + '] Error: ' + filename + ': Non-authorized file.')
                 else:
                     self.files.append(File(filename, None, unzip))
 

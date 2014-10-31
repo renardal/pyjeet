@@ -9,7 +9,8 @@
 
 import os
 import sys
-
+import logging
+logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 from log import Log
 
 
@@ -33,10 +34,10 @@ class File:
                 try:
                     self.raw = open(self.path, 'r')
                 except IOError as e:
-                    print self.path + ': ' + e.strerror
+                    logging.error(self.path + ': ' + e.strerror)
                     sys.exit(0)
             else:
-                print "Unzipping archived logs..."
+                logging.info("Unzipping archived logs...")
                 filenames = self._get_rotated_files()
                 if not os.path.exists(self.dir_path):
                     os.makedirs(self.dir_path)
@@ -49,7 +50,7 @@ class File:
                 try:
                     self.raw = open(self.dir_path + "/" + self.name, 'r')
                 except IOError as e:
-                    print self.path + ': ' + e.strerror
+                    logging.error(self.path + ': ' + e.strerror)
                     sys.exit(0)
 
     def _get_rotated_files(self):

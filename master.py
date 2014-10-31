@@ -18,6 +18,8 @@ from slave import Slave
 import threading
 import pdb
 import glob
+import logging
+logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 
 def is_number(s):
@@ -171,7 +173,7 @@ class Master:
                     if f[0][-1] != '/': f[0]+='/'
                     files = glob.glob(f[0]+"*.log")
                 else:
-                    print "Error in formatting of folders names"
+                    logging.error("Error in formatting of folders names")
                     sys.exit(1)
                 self.args.files += files
 
@@ -201,7 +203,7 @@ class Master:
                     if t is not main_thread:
                         t.join()
             except (KeyboardInterrupt, SystemExit):
-                print "Error or interrupt while normalizing logs"
+                logging.debug("Error or interrupt while normalizing logs")
                 self.normalized_logs['current_chunk'] = self.num_chunks
                 self.gui.leave()
                 sys.exit()
@@ -226,7 +228,7 @@ class Master:
             if self.total_logs > 0:
                 self.num_chunks = self.total_logs
             else:
-                print "No logs were normalized"
+                logging.debug("No logs were normalized")
                 sys.exit(1)
         else:
             self.normalized_logs['chunk_size'] = size_of_chunk
@@ -240,9 +242,9 @@ class Master:
 
     def is_master_ready(self):
         if not len(self.selected_hosts) and not self.cl_support:
-            print 'Error: No valid host nor clsupport archive specified.'
-            print 'List of given hostname(s) (from the populated dotfile): ' + str(
-                self.hosts.keys()) + '.'
+            logging.error('Error: No valid host nor clsupport archive specified.')
+            logging.info('List of given hostname(s) (from the populated dotfile): ' + str(
+                self.hosts.keys()) + '.')
             return False
         return True
 
@@ -253,7 +255,7 @@ class Master:
                 host.connect(self.context)
                 self.selected_hosts[hostname] = host
             else:
-                print 'Warning: Unknown hostname: `' + str(hostname) + '`.'
+                logging.warn('Warning: Unknown hostname: `' + str(hostname) + '`.')
         return self.selected_hosts
 
     def set_selected_files_for_hosts(self, file_list, unzip, standalone):
@@ -294,7 +296,7 @@ class Master:
             if len(elem) == 2:
                 if elem[0] != hostname:
                     if hosts and not elem[0] in hosts:
-                        print 'Warning: Unknown hostname: `' + elem[0] + '`.'
+                        logging.warn('Warning: Unknown hostname: `' + elem[0] + '`.')
                     continue
                 else:
                     res.append(elem[1])
@@ -417,12 +419,10 @@ class Master:
     def _display_hosts_history(self):
         for line in self._get_history('History by host:'):
             print line
-        print
 
     def _display_interfaces_history(self):
         for line in self._get_interfaces_history:
             print line
-        print
 
     def _get_origin_file(self, label, log, host):
         highlight_number = None
@@ -437,7 +437,7 @@ class Master:
                 if line == log:
                     highlight_number = content.__len__() - 1
             if not highlight_number:
-                print "Provided log not found in original file"
+                logging.error("Provided log not found in original file: %s" % str(log.raw))
                 sys.exit(1)
             else:
                 return content, highlight_number

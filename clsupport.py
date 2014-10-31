@@ -7,6 +7,8 @@
 #
 
 from logcontainer import *
+import logging
+logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 
 class Clsupport(LogContainer):
@@ -39,7 +41,7 @@ class Clsupport(LogContainer):
         for filename in selected_files:
             path_to_file = self.path_to_untar + '/var/log/' + filename
             if not os.path.isfile(path_to_file):
-                print '[' + self.name + '] Error: ' + path_to_file + ': File not found in clsupport'
+                logging.warn('[' + self.name + '] Error: ' + path_to_file + ': File not found in clsupport')
                 continue
             else:
                 self.files.append(File(path_to_file, None, unzip))

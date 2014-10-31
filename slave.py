@@ -9,6 +9,8 @@
 import os
 import zmq
 import rfc
+import logging
+logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 
 class Slave:
@@ -32,13 +34,13 @@ class Slave:
         while 42:
             try:
                 req = self.server.recv_json()
-                print req
+                logging.info("Request received: %s" % str(req))
                 if req:
                     result = self.command[req['command']](req['arg'] if 'arg' in req else [])
                     if result:
                         self.server.send_json(result)
             except Exception as e:
-                print e
+                logging.error("Error while processing request %s" % str(e))
                 """
                 Stayin' alive.
                 Stayin' alive.
@@ -57,7 +59,7 @@ class Slave:
             if '..' in filename: # or (from_base_dir and not filename.endswith('log')):
                 result[filename] = {'error': 'Non-authorized file.'}
             else:
-                print 'GET/ %s' % filename
+                logging.info('GET/ %s' % filename)
                 path = self.BASE_DIRECTORY + filename
                 try:
                     content = []
@@ -66,7 +68,7 @@ class Slave:
                         content.append(unicode(line[:-1], errors='replace'))
                     result[filename] = {'content': content}
                 except IOError as e:
-                    print path + ': ' + e.strerror
+                    logging.error( path + ': ' + e.strerror)
                     result[filename] = {'error': e.strerror}
         return rfc.create_reply(True, result)
 

@@ -14,6 +14,8 @@ from abc import ABCMeta, abstractmethod
 import time
 import math
 import threading
+import logging
+logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 
 class Gui:
@@ -116,7 +118,7 @@ class Gui:
             t = threading.Thread(target=self.wait_display)
             t.start()
         except (KeyboardInterrupt, SystemExit):
-            print "Error when launching waiting thread"
+            logging.error("Error when launching waiting thread")
             sys.exit()
 
     @staticmethod
@@ -331,7 +333,7 @@ class Menu:
 
     @staticmethod
     def _key_escape():
-        print "User quit application pressing ESC"
+        logging.info("User quit application pressing ESC")
         sys.exit(0)
 
     def _key_backspace(self):
