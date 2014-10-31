@@ -19,6 +19,7 @@ import threading
 import pdb
 import glob
 import logging
+import difflib
 logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 
@@ -442,6 +443,25 @@ class Master:
             else:
                 return content, highlight_number
 
+    def _get_frequency_listing(self, label, log, host):
+        self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
+        content = []
+        current = 0
+        num_max = 0
+        treshold = 0.7
+        for line in host.logs:
+            if 'body' in line.data and 'body' in log.data:
+                sim = difflib.SequenceMatcher(None, line.data['body'], log.data['body']).ratio()
+                if sim > treshold: 
+                    current += 1
+                    if current > num_max:
+                        num_max = current
+                    content.append(line.data['body'])
+        for l in content:
+            logging.info(l) 
+        sys.exit(0)
+        return content
+
     def analyse_gui_req(self, req):
         highlight = None
         if req.field:
@@ -472,6 +492,8 @@ class Master:
                 content, highlight = self._get_origin_file('Log line in its original File:', log, host)
             elif req.operation == "frequency":
                 logging.debug("User requested frequency of log line")
+                # display = LogFrequency
+                content = self._get_frequency_listing("Frequency for this log in holding host:", log, host)
                 sys.exit(0)
             else:
                 logging.error("WWTF %s" % req.operation)
