@@ -465,10 +465,17 @@ class Master:
                 content = self._get_history('History by host:')
         elif req.line_number >= 0:
             # see log line in its original file
-            display = OriginFile
             log = self.current_log_buffer[req.line_number][0]
             host = self.current_log_buffer[req.line_number][1]
-            content, highlight = self._get_origin_file('Log line in its original File:', log, host)
+            if req.operation == "origin":
+                display = OriginFile
+                content, highlight = self._get_origin_file('Log line in its original File:', log, host)
+            elif req.operation == "frequency":
+                logging.debug("User requested frequency of log line")
+                sys.exit(0)
+            else:
+                logging.error("WWTF %s" % req.operation)
+                sys.exit(0)
         else:
             display = LogHistory
             content = self._get_history('History by host:')

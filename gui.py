@@ -195,12 +195,13 @@ class Output:
 
 
 class Request:
-    def __init__(self, field=None, body=None, message=None, line_number=None, num_lines_max=None):
+    def __init__(self, field=None, body=None, message=None, line_number=None, num_lines_max=None, operation=None):
         self.field = field
         self.body = body
         self.message = message
         self.line_number = line_number
         self.num_lines_max = num_lines_max
+        self.operation = operation
 
 
 class Information:
@@ -557,10 +558,10 @@ class LogHistory(Body):
         except curses.error:
             return
 
-    def post_request(self):
+    def post_request(self, operation):
         #get args for linked content
         input_line = self.pad.instr(self.top + self.pos[0] - self.top_margin, 0)
-        return Request(None, self, input_line, self.top + self.pos[0] - self.top_margin)
+        return Request(None, self, input_line, self.top + self.pos[0] - self.top_margin, None, operation)
 
     def action(self, c):
         #space bar is hit
@@ -570,9 +571,12 @@ class LogHistory(Body):
             self.down()
         elif c == curses.KEY_UP:
             self.up()
-        # Find linked content on Enter Key
+        # Find linked content on Enter Key from origin file
         elif c == 0xa or c == curses.KEY_ENTER:
-            return self.post_request()
+            return self.post_request("origin")
+        # Find frequency of logs accross files
+        elif c == 0x66:
+            return self.post_request("frequency")
         # go back on delete key
         elif c in [0x7f, 0x8, curses.KEY_BACKSPACE]:
             self.move_page(-1)
