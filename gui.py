@@ -712,22 +712,32 @@ class LogFrequency(Body):
         self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
         self.info.display()
         # pad for log lines
-        self.pad.chgat(0, 0, curses.A_REVERSE)
+        self.pad.chgat(0, 1, 19, curses.A_REVERSE)
+        self.frequency_viz()
         self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
         # put cursor on the first line
         self.pos = [self.top_margin, 0]
         self.show_cursor()
 
+    def frequency_viz(self):
+        (y, x) = self.window.getmaxyx()
+        # highlight all lines in page according to frequency
+        for i in range(self.num_lines):
+            frequ = int(self.output[i].text.split(']')[-1])
+            ratio = frequ/float(self.fmax)
+            length = int(ratio*x)
+            self.pad.chgat(i, 22, length, curses.A_REVERSE)
+
     def up(self):
         try:
             if self.pos[0] > self.top_margin:
                 #set current line to normal
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
                 # move cursor
                 self.pos[0] -= 1
                 self.show_cursor()
                 # highlight next line & refresh
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_REVERSE)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_REVERSE)
                 self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
             else:
                 pass
@@ -740,18 +750,18 @@ class LogFrequency(Body):
             if self.remaining_lines != 0 and self.page_counter % (self.num_full_pages + 1) == self.num_full_pages:
                 if self.pos[0] < self.remaining_lines + self.top_margin - 1:
                     #unhighlight current line, move cursor, and highlight next line
-                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
                     self.pos[0] += 1
                     self.show_cursor()
-                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_REVERSE)
+                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_REVERSE)
                     self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
                 else:
                     pass
             elif self.pos[0] < self.body_h + self.top_margin - 1:
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
                 self.pos[0] += 1
                 self.show_cursor()
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_REVERSE)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_REVERSE)
                 self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
                 return
             else:
@@ -762,13 +772,13 @@ class LogFrequency(Body):
     def move_page(self, offset):
         try:
             # unhighlight current line
-            self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+            self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
             self.page_counter += offset
             # cleat current page
             self.clear_current_page()
             self.window.refresh()
             # highlight first line of next page
-            self.pad.chgat(self.top, 0, curses.A_REVERSE)
+            self.pad.chgat(self.top, 1, 19, curses.A_REVERSE)
             self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
             # put cursor on the first line
             self.pos = [self.top_margin, 0]

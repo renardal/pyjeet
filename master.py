@@ -451,7 +451,7 @@ class Master:
         treshold = 0.7
         time_span = 1000
         if not 'body' in log.data:
-            return []
+            return [], 0
         for line in host.logs:
             if 'body' in line.data:
                 sim = difflib.SequenceMatcher(None, line.data['body'], log.data['body']).ratio()
@@ -467,10 +467,6 @@ class Master:
                         time_slices.append([line.date, 1, str(line.verbose_date() if line.verbose_date() else line.date)])
         for result in time_slices:
             content.append('[' + result[2] + '] ' + str(result[1]))
-        #for l in content:
-        #    logging.info(l) 
-        #logging.debug(num_max)
-        #sys.exit(0)
         return content, num_max
 
     def analyse_gui_req(self, req):
