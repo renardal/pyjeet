@@ -138,6 +138,9 @@ class Gui:
         elif isinstance(self.body, LogHistory) and output.display == OriginFile:
             self.buffer_body = self.body
             self.body = output.display(self.window, self.info, output.content, cap, output.highlighted_line)
+        elif isinstance(self.body, LogHistory) and output.display == LogFrequency:
+            self.buffer_body = self.body
+            self.body = output.display(self.window, self.info, output.content, cap, None, output.fmax)
         self.body.show_cursor()
         self.body.refresh_pad()
 
@@ -182,6 +185,7 @@ class Output:
         self.display = display
         self.content = []
         self.highlighted_line = None
+        self.fmax = None
 
     def fill_content_from_strings(self, messages):
         if not self.content:
@@ -191,6 +195,10 @@ class Output:
 
     def set_highlighted_line(self, log=None):
         self.highlighted_line = log
+        return self
+
+    def set_max_frequency(self, fmax=None):
+        self.fmax = fmax
         return self
 
 
@@ -279,18 +287,18 @@ class Menu:
 
         self.actions = \
             {
-                0x1b: self._key_escape,
-                curses.KEY_UP: self._key_up,
-                curses.KEY_DOWN: self._key_down,
-                curses.KEY_LEFT: self._key_left,
-                curses.KEY_RIGHT: self._key_right,
+                0x1b: self._KEY_ESCAPE,
+                curses.KEY_UP: self._KEY_UP,
+                curses.KEY_DOWN: self._KEY_DOWN,
+                curses.KEY_LEFT: self._KEY_LEFT,
+                curses.KEY_RIGHT: self._KEY_RIGHT,
 
-                0x7f: self._key_backspace,
-                0x8: self._key_backspace,
-                curses.KEY_BACKSPACE: self._key_backspace,
+                0x7f: self._KEY_BACKSPACE,
+                0x8: self._KEY_BACKSPACE,
+                curses.KEY_BACKSPACE: self._KEY_BACKSPACE,
 
-                0xa: self._key_enter,
-                curses.KEY_ENTER: self._key_enter,
+                0xa: self._KEY_ENTER,
+                curses.KEY_ENTER: self._KEY_ENTER,
             }
 
     def add_field(self, field):
@@ -312,38 +320,38 @@ class Menu:
     def current_field(self):
         return self.fields[self.count % len(self.fields)]
 
-    def _key_down(self):
+    def _KEY_DOWN(self):
         self.down()
         self.current_field.show_cursor()
         return None
 
-    def _key_up(self):
+    def _KEY_UP(self):
         self.up()
         self.current_field.show_cursor()
         return None
 
-    def _key_left(self):
+    def _KEY_LEFT(self):
         self.current_field.left()
         self.current_field.show_cursor()
         return None
 
-    def _key_right(self):
+    def _KEY_RIGHT(self):
         self.current_field.right()
         self.current_field.show_cursor()
         return None
 
     @staticmethod
-    def _key_escape():
+    def _KEY_ESCAPE():
         logging.info("User quit application pressing ESC")
         sys.exit(0)
 
-    def _key_backspace(self):
+    def _KEY_BACKSPACE(self):
         self.current_field.delete_char()
         self.current_field.show_cursor()
         return None
 
-    def _key_enter(self):
-        return self.current_field.post_request()
+    def _KEY_ENTER(self):
+        return self.current_field.post_Request()
 
     def action(self, input):
         if input in self.actions:
@@ -396,7 +404,7 @@ class Field:
             self.window.delch(self.pos[0], self.pos[1] - 1)
             self.left()
 
-    def post_request(self):
+    def post_Request(self):
         return Request(self, None, self.input)
 
 
@@ -475,7 +483,7 @@ class LogHistory(Body):
         self.display_first_page()
 
     def display_first_page(self):
-        #User info
+        #user info
         (y, x) = self.window.getmaxyx()
         self.window.move(y - self.info_y, 0)
         self.window.clrtoeol()
@@ -558,7 +566,7 @@ class LogHistory(Body):
         except curses.error:
             return
 
-    def post_request(self, operation):
+    def post_Request(self, operation):
         #get args for linked content
         input_line = self.pad.instr(self.top + self.pos[0] - self.top_margin, 0)
         return Request(None, self, input_line, self.top + self.pos[0] - self.top_margin, None, operation)
@@ -571,12 +579,12 @@ class LogHistory(Body):
             self.down()
         elif c == curses.KEY_UP:
             self.up()
-        # Find linked content on Enter Key from origin file
+        # Find linked content on enter key from origin file
         elif c == 0xa or c == curses.KEY_ENTER:
-            return self.post_request("origin")
+            return self.post_Request("origin")
         # Find frequency of logs accross files
         elif c == 0x66:
-            return self.post_request("frequency")
+            return self.post_Request("frequency")
         # go back on delete key
         elif c in [0x7f, 0x8, curses.KEY_BACKSPACE]:
             self.move_page(-1)
@@ -686,3 +694,119 @@ class OriginFile(Body):
                 pass
         except curses.error:
             return
+
+
+class LogFrequency(Body):
+    def __init__(self, window, info, output, cap, highlight, fmax):
+        Body.__init__(self, window, info, output, cap, highlight)
+        self.fmax = fmax
+        #  displays first page
+        self.display_first_page()
+
+    def display_first_page(self):
+        #user info
+        (y, x) = self.window.getmaxyx()
+        self.window.move(y - self.info_y, 0)
+        self.window.clrtoeol()
+        info_line = "* %d more lines - press the space bar to display more *" % max((self.num_lines - self.body_h), 0)
+        self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
+        self.info.display()
+        # pad for log lines
+        self.pad.chgat(0, 0, curses.A_REVERSE)
+        self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
+        # put cursor on the first line
+        self.pos = [self.top_margin, 0]
+        self.show_cursor()
+
+    def up(self):
+        try:
+            if self.pos[0] > self.top_margin:
+                #set current line to normal
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+                # move cursor
+                self.pos[0] -= 1
+                self.show_cursor()
+                # highlight next line & refresh
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_REVERSE)
+                self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
+            else:
+                pass
+        except curses.error:
+            return
+
+    def down(self):
+        try:
+            #if on the last page not fully filled
+            if self.remaining_lines != 0 and self.page_counter % (self.num_full_pages + 1) == self.num_full_pages:
+                if self.pos[0] < self.remaining_lines + self.top_margin - 1:
+                    #unhighlight current line, move cursor, and highlight next line
+                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+                    self.pos[0] += 1
+                    self.show_cursor()
+                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_REVERSE)
+                    self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
+                else:
+                    pass
+            elif self.pos[0] < self.body_h + self.top_margin - 1:
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+                self.pos[0] += 1
+                self.show_cursor()
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_REVERSE)
+                self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
+                return
+            else:
+                pass
+        except curses.error:
+            return
+
+    def move_page(self, offset):
+        try:
+            # unhighlight current line
+            self.pad.chgat(self.top + self.pos[0] - self.top_margin, 0, curses.A_NORMAL)
+            self.page_counter += offset
+            # cleat current page
+            self.clear_current_page()
+            self.window.refresh()
+            # highlight first line of next page
+            self.pad.chgat(self.top, 0, curses.A_REVERSE)
+            self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
+            # put cursor on the first line
+            self.pos = [self.top_margin, 0]
+            self.show_cursor()
+             # update user info
+            if self.remaining_lines != 0 and self.page_counter % (self.num_full_pages + 1) == self.num_full_pages:
+                info_line = "* press the space bar to display the first lines again *"
+            else:
+                info_line = "* %d more lines - press the space bar to display more *" \
+                    % (self.num_lines - self.top - self.body_h)
+            (y, x) = self.window.getmaxyx()
+            self.window.move(y - self.info_y, 0)
+            self.window.clrtoeol()
+            self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
+            self.info.display()
+        except curses.error:
+            return
+
+    def post_Request(self, operation):
+        #get args for linked content
+        input_line = self.pad.instr(self.top + self.pos[0] - self.top_margin, 0)
+        #return Request(None, self, input_line, self.top + self.pos[0] - self.top_margin, None, operation)
+        pass
+
+    def action(self, c):
+        #space bar is hit
+        if c == 0x20:
+            self.move_page(1)
+        elif c == curses.KEY_DOWN:
+            self.down()
+        elif c == curses.KEY_UP:
+            self.up()
+        # find content at time stamp on Enter Key
+        elif c == 0xa or c == curses.KEY_ENTER:
+            return self.post_Request("context")
+        # go back on delete key
+        elif c in [0x7f, 0x8, curses.KEY_BACKSPACE]:
+            self.move_page(-1)
+        else:
+            return
+

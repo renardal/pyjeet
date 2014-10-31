@@ -467,13 +467,15 @@ class Master:
                         time_slices.append([line.date, 1, str(line.verbose_date() if line.verbose_date() else line.date)])
         for result in time_slices:
             content.append('[' + result[2] + '] ' + str(result[1]))
-        for l in content:
-            logging.info(l) 
-        sys.exit(0)
-        return content
+        #for l in content:
+        #    logging.info(l) 
+        #logging.debug(num_max)
+        #sys.exit(0)
+        return content, num_max
 
     def analyse_gui_req(self, req):
         highlight = None
+        num_max = None
         if req.field:
             # flush current log buffer
             self.current_log_buffer = []
@@ -502,17 +504,16 @@ class Master:
                 content, highlight = self._get_origin_file('Log line in its original File:', log, host)
             elif req.operation == "frequency":
                 logging.debug("User requested frequency of log line")
-                # display = LogFrequency
-                content = self._get_frequency_listing("Frequency for this log in holding host:", log, host)
-                sys.exit(0)
+                display = LogFrequency
+                content, num_max = self._get_frequency_listing("Frequency for < %s >:" % log.data['raw'], log, host)
             else:
-                logging.error("WWTF %s" % req.operation)
+                logging.error("Error Unknown operation in Request %s" % req.operation)
                 sys.exit(0)
         else:
             display = LogHistory
             content = self._get_history('History by host:')
         if len(content) >= 1:
-            return Output(display).fill_content_from_strings(content).set_highlighted_line(highlight)
+            return Output(display).fill_content_from_strings(content).set_highlighted_line(highlight).set_max_frequency(num_max)
         else:
             return None
 
