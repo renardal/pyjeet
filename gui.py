@@ -49,9 +49,9 @@ class Gui:
         # Body created on the fly
         self.body = None
 
-        # get a pointer to save current body when getting origin file
-        # content from a log line
+        # Buffer previous body to be able to go back
         self.buffer_body = None
+        self.buffer_body2 = None
 
     # loading function run in a thread
     def loading(self, normalized_logs, num_chunks):
@@ -141,6 +141,9 @@ class Gui:
         elif isinstance(self.body, LogHistory) and output.display == LogFrequency:
             self.buffer_body = self.body
             self.body = output.display(self.window, self.info, output.content, cap, None, output.fmax)
+        elif isinstance(self.body, LogFrequency) and output.display == LogHistory:
+            self.buffer_body2 = self.body
+            self.body = output.display(self.window, self.info, output.content, cap)
         self.body.show_cursor()
         self.body.refresh_pad()
 
@@ -151,11 +154,16 @@ class Gui:
         return self.menu.action(c)
 
     def go_back(self, output):
-        if self.buffer_body:
+        if self.buffer_body and not self.buffer_body2:
             self.body.clear_current_page()
             self.body = self.buffer_body
             self.buffer_body = None
             output.display = LogHistory
+        elif self.buffer_body2:
+            self.body.clear_current_page()
+            self.body = self.buffer_body2
+            self.buffer_body2 = None
+            output.display = LogFrequency
         else:
             output = None
             self.body = None
@@ -700,6 +708,9 @@ class LogFrequency(Body):
     def __init__(self, window, info, output, cap, highlight, fmax):
         Body.__init__(self, window, info, output, cap, highlight)
         self.fmax = fmax
+        self.date_left = 1
+        self.date_right = 19
+        self.after_date = 22
         #  displays first page
         self.display_first_page()
 
@@ -712,7 +723,7 @@ class LogFrequency(Body):
         self.info.line_add(info_line, (self.info_y, 0), "bottom-left", self.window)
         self.info.display()
         # pad for log lines
-        self.pad.chgat(0, 1, 19, curses.A_REVERSE)
+        self.pad.chgat(0, self.date_left, self.date_right, curses.A_REVERSE)
         self.frequency_viz()
         self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
         # put cursor on the first line
@@ -732,12 +743,12 @@ class LogFrequency(Body):
         try:
             if self.pos[0] > self.top_margin:
                 #set current line to normal
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_NORMAL)
                 # move cursor
                 self.pos[0] -= 1
                 self.show_cursor()
                 # highlight next line & refresh
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_REVERSE)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_REVERSE)
                 self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
             else:
                 pass
@@ -750,18 +761,18 @@ class LogFrequency(Body):
             if self.remaining_lines != 0 and self.page_counter % (self.num_full_pages + 1) == self.num_full_pages:
                 if self.pos[0] < self.remaining_lines + self.top_margin - 1:
                     #unhighlight current line, move cursor, and highlight next line
-                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
+                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_NORMAL)
                     self.pos[0] += 1
                     self.show_cursor()
-                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_REVERSE)
+                    self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_REVERSE)
                     self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
                 else:
                     pass
             elif self.pos[0] < self.body_h + self.top_margin - 1:
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_NORMAL)
                 self.pos[0] += 1
                 self.show_cursor()
-                self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_REVERSE)
+                self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_REVERSE)
                 self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
                 return
             else:
@@ -772,13 +783,13 @@ class LogFrequency(Body):
     def move_page(self, offset):
         try:
             # unhighlight current line
-            self.pad.chgat(self.top + self.pos[0] - self.top_margin, 1, 19, curses.A_NORMAL)
+            self.pad.chgat(self.top + self.pos[0] - self.top_margin, self.date_left, self.date_right, curses.A_NORMAL)
             self.page_counter += offset
             # cleat current page
             self.clear_current_page()
             self.window.refresh()
             # highlight first line of next page
-            self.pad.chgat(self.top, 1, 19, curses.A_REVERSE)
+            self.pad.chgat(self.top, self.date_left, self.date_right, curses.A_REVERSE)
             self.pad.refresh(self.top, 0, self.top_margin, 0, self.body_h + self.top_margin - 1, self.X - 1)
             # put cursor on the first line
             self.pos = [self.top_margin, 0]
@@ -797,11 +808,12 @@ class LogFrequency(Body):
         except curses.error:
             return
 
-    def post_Request(self, operation):
+    def get_context(self):
         #get args for linked content
         input_line = self.pad.instr(self.top + self.pos[0] - self.top_margin, 0)
-        #return Request(None, self, input_line, self.top + self.pos[0] - self.top_margin, None, operation)
-        pass
+        input_line = input_line.split('[')[-1].split(']')[0]
+        logging.debug(input_line)
+        return Request(None, self, input_line, self.top + self.pos[0] - self.top_margin, None, "context")
 
     def action(self, c):
         #space bar is hit
@@ -813,7 +825,7 @@ class LogFrequency(Body):
             self.up()
         # find content at time stamp on Enter Key
         elif c == 0xa or c == curses.KEY_ENTER:
-            return self.post_Request("context")
+            return self.get_context()
         # go back on delete key
         elif c in [0x7f, 0x8, curses.KEY_BACKSPACE]:
             self.move_page(-1)

@@ -502,6 +502,10 @@ class Master:
                 logging.debug("User requested frequency of log line")
                 display = LogFrequency
                 content, num_max = self._get_frequency_listing("Frequency for < %s >:" % log.data['raw'], log, host)
+            elif req.operation == "context":
+                content = self._get_history('History at given time by host:', self._get_time_history,
+                                            str(req.message))
+                display = LogHistory
             else:
                 logging.error("Error Unknown operation in Request %s" % req.operation)
                 sys.exit(0)
