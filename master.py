@@ -328,7 +328,8 @@ class Master:
 
     @property
     def _get_interfaces_history(self):
-        self.gui.info.line_add('Interface\'s history by host:', (2, 0), "top-left", self.gui.window)
+        if self.gui:
+            self.gui.info.line_add('Interface\'s history by host:', (2, 0), "top-left", self.gui.window)
         content = []
         for host in self.selected_hosts.values():
             for interface in host.selected_interfaces:
@@ -370,7 +371,8 @@ class Master:
 
     def _get_history(self, label, search_callback=None, *args):
         self.output_count = 0
-        self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
+        if self.gui:
+            self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
         content = []
         for host in self.selected_hosts.values():
             if not host.logs:
