@@ -446,17 +446,27 @@ class Master:
     def _get_frequency_listing(self, label, log, host):
         self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
         content = []
-        current = 0
+        time_slices = []
         num_max = 0
         treshold = 0.7
+        time_span = 1000
+        if not 'body' in log.data:
+            return []
         for line in host.logs:
-            if 'body' in line.data and 'body' in log.data:
+            if 'body' in line.data:
                 sim = difflib.SequenceMatcher(None, line.data['body'], log.data['body']).ratio()
                 if sim > treshold: 
-                    current += 1
-                    if current > num_max:
-                        num_max = current
-                    content.append(line.data['body'])
+                    if len(time_slices) == 0:
+                        time_slices.append([line.date, 1, str(line.verbose_date() if line.verbose_date() else line.date)])
+                        continue
+                    if line.date - time_slices[-1][0] < time_span:
+                        time_slices[-1][1] += 1    
+                        if time_slices[-1][1] > num_max:
+                            num_max = time_slices[-1][1]
+                    else:
+                        time_slices.append([line.date, 1, str(line.verbose_date() if line.verbose_date() else line.date)])
+        for result in time_slices:
+            content.append('[' + result[2] + '] ' + str(result[1]))
         for l in content:
             logging.info(l) 
         sys.exit(0)
