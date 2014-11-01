@@ -49,9 +49,8 @@ class Gui:
         # Body created on the fly
         self.body = None
 
-        # Buffer previous body to be able to go back
-        self.buffer_body = None
-        self.buffer_body2 = None
+        # Buffer stack to hold previous bodies
+        self.buffer_body = []
 
     # loading function run in a thread
     def loading(self, normalized_logs, num_chunks):
@@ -135,15 +134,23 @@ class Gui:
     def set_display_body(self, output, cap):
         if not self.body:
             self.body = output.display(self.window, self.info, output.content, cap)
-        elif isinstance(self.body, LogHistory) and output.display == OriginFile:
-            self.buffer_body = self.body
-            self.body = output.display(self.window, self.info, output.content, cap, output.highlighted_line)
-        elif isinstance(self.body, LogHistory) and output.display == LogFrequency:
-            self.buffer_body = self.body
-            self.body = output.display(self.window, self.info, output.content, cap, None, output.fmax)
-        elif isinstance(self.body, LogFrequency) and output.display == LogHistory:
-            self.buffer_body2 = self.body
-            self.body = output.display(self.window, self.info, output.content, cap)
+        else:
+            if output.display == OriginFile:
+                if not isinstance(self.body, OriginFile): 
+                    self.buffer_body.append(self.body)
+                    self.body = output.display(self.window, self.info, output.content, cap, output.highlighted_line)
+            elif output.display == LogFrequency:
+                if not isinstance(self.body, LogFrequency): 
+                    self.buffer_body.append(self.body)
+                    self.body = output.display(self.window, self.info, output.content, cap, None, output.fmax)
+            elif output.display == LogHistory :
+                if not isinstance(self.body, LogHistory): 
+                    self.buffer_body.append(self.body)
+                    self.body = output.display(self.window, self.info, output.content, cap)
+            else:
+                logging.error("Unknown output display")
+                logging.error(output.display)
+                sys.exit(0)
         self.body.show_cursor()
         self.body.refresh_pad()
 
@@ -154,16 +161,10 @@ class Gui:
         return self.menu.action(c)
 
     def go_back(self, output):
-        if self.buffer_body and not self.buffer_body2:
+        if len(self.buffer_body) >= 1:
             self.body.clear_current_page()
-            self.body = self.buffer_body
-            self.buffer_body = None
-            output.display = LogHistory
-        elif self.buffer_body2:
-            self.body.clear_current_page()
-            self.body = self.buffer_body2
-            self.buffer_body2 = None
-            output.display = LogFrequency
+            self.body = self.buffer_body.pop()
+            output.display = self.body.__class__
         else:
             output = None
             self.body = None
