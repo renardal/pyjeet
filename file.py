@@ -38,9 +38,9 @@ class File:
                     sys.exit(0)
             else:
                 logging.info("Unzipping archived logs...")
-                filenames = self._get_rotated_files()
                 if not os.path.exists(self.dir_path):
                     os.makedirs(self.dir_path)
+                filenames = self._get_rotated_files()
                 with open(self.dir_path + "/" + self.name, 'w') as outfile:
                     #reversed because the highest number is the oldest log file
                     for fname in reversed(filenames):
