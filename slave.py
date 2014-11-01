@@ -97,7 +97,7 @@ class Slave:
 
     @staticmethod
     def bridges_files():
-        return [Slave._get_brctl_path()]
+        return Slave._get_brctl_path()
 
     def _get_interfaces_files(self, arg):
         return self._get_files(self.interface_files(), False)

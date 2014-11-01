@@ -17,6 +17,8 @@ class LogContainer:
         self.logs = []
         self.interfaces = []
         self.selected_interfaces = []
+        self.bridges = []
+        self.selected_bridges = []
 
     @abstractmethod
     def get_interfaces_files(self, standalone):
@@ -35,6 +37,16 @@ class LogContainer:
         else:
             self.selected_interfaces = self.get_interfaces_from_names(selected_interfaces)
 
+    def set_selected_bridges(self, selected_bridges):
+        #select bridges  with user input in the loaded bridges
+        if not self.bridges:
+            self.load_bridges(normalizer)
+        #if no particular bridge is chosen get them all
+        if not len(selected_bridges):
+            self.selected_bridges = self.bridges
+        else:
+            self.selected_bridges = self.get_bridges_from_names(selected_bridges)
+
     def load_interfaces(self, normalizer, standalone=False):
         #loads all interfaces from interface conf files
         files_info = self.get_interfaces_files(standalone)
@@ -46,16 +58,33 @@ class LogContainer:
                     self.interfaces.append(Interface(data))
         return self
 
-    def load_bridges(self, normalizer, standalone):
+    def load_bridges(self, standalone=False):
         #loads all bridges from brctl conf files
-        files_info = self.get_bridges_files(standalone)
-        for info in files_info:
-            for data in File(info['name'], info['content']).normalize(normalizer, is_log=False,debug_context=True).data:
-                if not data.has_key('linux_interface'):
-                    continue
-                if not self.find_interface(data):
-                    self.interfaces.append(Interface(data))
+        # not generalized for now /!\ get opened file
+        brctl_data = self.get_bridges_files(standalone)
+        for line in brctl_data:
+            line = line.split()
+            if len(line) == 1:
+                self.bridges[-1].add_if(get_if_object_from_name(line[0]))
+            elif len(line) == 4:
+                self.bridges.append(Bridge(line[-1]))
+            else:
+                logging.debug("Weird number of parameters in line from brctl show")
+                continue
         return self
+
+    def interfaces_from_bridges(self):
+        if_list = []
+        for b in self.selected_bridges:
+            for inf in b.interfaces:
+                if inf.linux not in if_list:
+                    if_list.append(inf.linux)
+        return if_list
+
+    def get_if_object_from_name(self, linux_name):
+        for interface in self.interfaces:
+            if interface.linux == linux_name:
+                return interface
 
     def find_interface(self, data):
         for interface in self.interfaces:
@@ -77,6 +106,10 @@ class LogContainer:
         return [interface for interface in self.interfaces if
                 (interface.linux and interfaces_name.count(interface.linux)) or (
                     interface.sdk and interfaces_name.count(interface.sdk))]
+
+    def get_bridges_from_names(self, bridges_name):
+        return [bridge for bridge in self.bridges if
+                (bridge.name and bridges_name.count(bridge.name))]
 
     def normalize_files(self, normalizer, timestamp, interval, normalized_logs=None):
         for f in self.files:

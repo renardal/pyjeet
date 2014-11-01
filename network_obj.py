@@ -26,11 +26,6 @@ class Interface:
             self.sdk = sdk
         return self
 
-    def set_id(self, id):
-        if self.id == None:
-            self.id = id
-        return self
-
     def set_ip(self, ip):
         if self.ip == None:
             self.ip = ip
@@ -39,7 +34,20 @@ class Interface:
         self.set_linux_id(data.get('linux_interface'))
         self.set_sdk_id(data.get('sdk_interface'))
         self.set_ip(data.get('ip_interface'))
-        self.set_id(data.get('id_interface'))
 
     def __str__(self):
         return str(self.linux) + ' ' + str(self.sdk) + ' ' + str(self.id)
+
+class Bridge:
+    def __init__(self, name):
+        self.name = name
+        self.interfaces = []
+        self.ip = None
+
+    def set_ip(self, ip):
+        if self.ip == None:
+            self.ip = ip
+
+    def add_if(self, interface):
+        if interface not in self.interfaces:
+            self.interfaces.append(interface)

@@ -281,6 +281,19 @@ class Master:
                 self._get_list_for_host(self.hosts.values(), host.name, interfaces_names))
         self.display_cb = self._display_interfaces_history
 
+    def set_selected_bridges_for_hosts(self, bridge_list, standalone):
+        interface_list = []
+        if bridge_list is None:
+            return
+        bridge_names = [bridge.split(':') for bridge in
+                            bridge_list if bridge]
+        for host in self.selected_hosts.values():
+            host.load_bridges(standalone).set_selected_bridges(
+                self._get_list_for_host(self.hosts.values(), host.name, bridge_names))
+            if_list = [inf + ":" + host.name for inf in host.interfaces_from_bridges()]
+            interface_list.extend(if_list)
+        set_selected_interfaces_for_hosts(interface_list, standalone)
+
     def set_selected_interfaces_for_clsupport(self, interface_list):
         if interface_list is None:
             return

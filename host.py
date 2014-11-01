@@ -81,7 +81,7 @@ class Host(LogContainer):
                 files.append({'name': if_file, 'content': open(if_file, 'r')})
             return files
 
-    def get_bridges_file(self, standalone):
+    def get_bridges_files(self, standalone):
         files = []
         if not standalone:
             if self.client:
@@ -94,9 +94,11 @@ class Host(LogContainer):
             return files
         else:
             #if standalone no Slave but make use of slave static functions
-            for bridge_file in Slave.bridges_files():
-                files.append({'name': bridge_file, 'content': open(bridge_file, 'r')})
-            return files
+            # /!\ for now only use brctl conf file without creating file object nor normalizing
+            # might need to change this later to generalize
+            #for bridge_file in Slave.bridges_files():
+            #    files.append({'name': bridge_file, 'content': open(bridge_file, 'r')})
+            return open(Slave.bridges_files(), 'r')
 
     def get_users(self):
         for u in ['root', ]:  # download users list
