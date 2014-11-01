@@ -52,12 +52,19 @@ class Gui:
         # Buffer stack to hold previous bodies
         self.buffer_body = []
 
-    # loading function run in a thread
+    # loading function runs in a thread
     def loading(self, normalized_logs, num_chunks):
-        self.info.display()
-        self.window.refresh()
         # window dimensions
         (y, x) = self.window.getmaxyx()
+        #  display rocket turtle
+        self.info.line_add("      _______   x x x", (y/2 - 3, x/2 - 10), "top-left", self.window) 
+        self.info.line_add(" ._  <_______~ x X x ", (y/2 - 3 + 1, x/2 - 10), "top-left", self.window) 
+        self.info.line_add("(' \  ,' || `,       ", (y/2 - 3 + 2, x/2 - 10), "top-left", self.window) 
+        self.info.line_add(" `._:^   ||   :>     ", (y/2 - 3 + 3, x/2 - 10), "top-left", self.window) 
+        self.info.line_add("     ^T~~~~~~T'      ", (y/2 - 3 + 4, x/2 - 10), "top-left", self.window) 
+        self.info.line_add("     ~\"     ~\"       ", (y/2 - 3 + 5, x/2 - 10), "top-left", self.window) 
+        self.info.display()
+        self.window.refresh()
         step = int(math.ceil(x/float(num_chunks)))
         while 42:
 	    # python list is deadlock safe
@@ -66,6 +73,8 @@ class Gui:
             time.sleep(0.1)
             if normalized_logs['current_chunk'] >= num_chunks:
                 self.window.chgat(0, 0, curses.A_NORMAL)
+                for i in range(6):
+                    self.info.remove_last()
                 return
 
     def run(self, output, cap):
@@ -236,6 +245,9 @@ class Information:
                 self.lines[i] = Line(text, coord, origin, window)
                 return
         self.lines.append(Line(text, coord, origin, window))
+
+    def remove_last(self):
+        self.lines.pop()
 
     def display(self):
         for line in self.lines:

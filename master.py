@@ -503,6 +503,8 @@ class Master:
                 display = LogFrequency
                 content, num_max = self._get_frequency_listing("Frequency for < %s >:" % log.data['raw'], log, host)
             elif req.operation == "context":
+                # flush current log buffer
+                self.current_log_buffer = []
                 content = self._get_history('History at given time by host:', self._get_time_history,
                                             str(req.message))
                 display = LogHistory
