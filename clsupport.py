@@ -37,6 +37,11 @@ class Clsupport(LogContainer):
         files = [{'name': porttab, 'content': open(porttab, 'r')}]
         return files
 
+    def get_bridges_files(self, standalone):
+        #get files from untared archive in config folder
+        brctl_show = self.path_to_untar + "/support/brctl.show"
+        return open(brctl_show, 'r')
+
     def set_files(self, selected_files, unzip):
         for filename in selected_files:
             path_to_file = self.path_to_untar + '/var/log/' + filename

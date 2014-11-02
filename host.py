@@ -84,14 +84,15 @@ class Host(LogContainer):
     def get_bridges_files(self, standalone):
         files = []
         if not standalone:
-            if self.client:
-                self.client.send_json(rfc.create_request('get_bridges_files', None))
-                res = self.client.recv_json()
-                if res and res['success']:
-                    for key in res['result']:
-                        if not res['result'][key].has_key('error'):
-                            files.append({'name': key, 'content': res['result'][key]['content']})
-            return files
+           pass
+           # if self.client:
+           #     self.client.send_json(rfc.create_request('get_bridges_files', None))
+           #     res = self.client.recv_json()
+           #     if res and res['success']:
+           #         for key in res['result']:
+           #             if not res['result'][key].has_key('error'):
+           #                 files.append({'name': key, 'content': res['result'][key]['content']})
+           # return files
         else:
             #if standalone no Slave but make use of slave static functions
             # /!\ for now only use brctl conf file without creating file object nor normalizing

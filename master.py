@@ -296,6 +296,19 @@ class Master:
             host.load_bridges(standalone).set_selected_bridges(
                 self._get_list_for_host(self.hosts.values(), host.name, bridge_names))
 
+    def set_selected_bridges_for_clsupport(self, bridge_list):
+        if bridge_list is None:
+            return
+        bridges_names = [bridge.split(':') for bridge in
+                            bridge_list if bridge]
+        self.cl_support.clear_selected_bridges()
+        # select all interfaces will then be filterd in get_history by bridge
+        if not self.cl_support.interfaces:
+            self.cl_support.load_interfaces(self.normalizer)
+        self.cl_support.selected_interfaces = self.cl_support.interfaces
+        self.cl_support.load_bridges(self.normalizer).set_selected_bridges(
+            self._get_list_for_clsupport(bridges_names))
+
     def set_selected_interfaces_for_clsupport(self, interface_list):
         if interface_list is None:
             return
@@ -355,7 +368,6 @@ class Master:
             # some log lines might appear several times under different interfaces
             # this is desired behaviour for now
             for interface in host.selected_interfaces:
-                logging.debug(interface.linux)
                 if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
                 if from_bridges:
                     if interface.bridge and interface.bridge in host.selected_bridges:
@@ -375,6 +387,11 @@ class Master:
             else:
                 for interface in self.cl_support.selected_interfaces:
                     if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
+                    if from_bridges:
+                        if interface.bridge and interface.bridge in self.cl_support.selected_bridges:
+                            if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
+                        else:
+                            continue
                     for line in self.cl_support.logs:
                         if 'intf' in line.data.keys():
                             if line.data['intf'] in [interface.linux, interface.sdk]:
@@ -510,8 +527,8 @@ class Master:
             elif req.field.name == "bridge":
                 # this will select all interfaces for all given bridges
                 self.set_selected_bridges_for_hosts(req.field.input.split(), self.args.standalone)
-                # /!\ add cl-support function here...
-                # if self.cl_support_archive:
+                if self.cl_support_archive:
+                    self.set_selected_bridges_for_clsupport(req.field.input.split())
                 # get history for all interfaces on given bridges
                 content = self._get_interfaces_history(True)
             elif req.field.name == "grep":
