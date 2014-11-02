@@ -47,6 +47,12 @@ class LogContainer:
         else:
             self.selected_bridges = self.get_bridges_from_names(selected_bridges)
 
+    def clear_selected_interfaces(self):
+        self.selected_interfaces = []
+
+    def clear_selected_bridges(self):
+        self.selected_bridges = []
+
     def load_interfaces(self, normalizer, standalone=False):
         #loads all interfaces from interface conf files
         files_info = self.get_interfaces_files(standalone)
@@ -65,21 +71,20 @@ class LogContainer:
         for line in brctl_data:
             line = line.split()
             if len(line) == 1:
-                self.bridges[-1].add_if(get_if_object_from_name(line[0]))
+                inf = self.get_if_object_from_name(line[0])
+                if inf is not None:
+                    inf.set_bridge(self.bridges[-1])
+                    self.bridges[-1].add_if(inf)
             elif len(line) == 4:
-                self.bridges.append(Bridge(line[-1]))
+                self.bridges.append(Bridge(line[0]))
+                inf = self.get_if_object_from_name(line[-1])
+                if inf is not None:
+                    inf.set_bridge(self.bridges[-1])
+                    self.bridges[-1].add_if(inf)
             else:
                 logging.debug("Weird number of parameters in line from brctl show")
                 continue
         return self
-
-    def interfaces_from_bridges(self):
-        if_list = []
-        for b in self.selected_bridges:
-            for inf in b.interfaces:
-                if inf.linux not in if_list:
-                    if_list.append(inf.linux)
-        return if_list
 
     def get_if_object_from_name(self, linux_name):
         for interface in self.interfaces:

@@ -277,22 +277,24 @@ class Master:
         interfaces_names = [interface.split(':') for interface in
                             interface_list if interface]
         for host in self.selected_hosts.values():
+            host.clear_selected_interfaces()
             host.load_interfaces(self.normalizer, standalone).set_selected_interfaces(
                 self._get_list_for_host(self.hosts.values(), host.name, interfaces_names))
         self.display_cb = self._display_interfaces_history
 
     def set_selected_bridges_for_hosts(self, bridge_list, standalone):
-        interface_list = []
         if bridge_list is None:
             return
         bridge_names = [bridge.split(':') for bridge in
                             bridge_list if bridge]
         for host in self.selected_hosts.values():
+            host.clear_selected_bridges()
+            # select all interfaces will then be filterd in get_history by bridge
+            if not host.interfaces:
+                host.load_interfaces(self.normalizer, standalone)
+            host.selected_interfaces = host.interfaces
             host.load_bridges(standalone).set_selected_bridges(
                 self._get_list_for_host(self.hosts.values(), host.name, bridge_names))
-            if_list = [inf + ":" + host.name for inf in host.interfaces_from_bridges()]
-            interface_list.extend(if_list)
-        set_selected_interfaces_for_hosts(interface_list, standalone)
 
     def set_selected_interfaces_for_clsupport(self, interface_list):
         if interface_list is None:
@@ -342,20 +344,31 @@ class Master:
         if callable(self.display_cb):
             self.display_cb()
 
-    @property
-    def _get_interfaces_history(self):
+    def _get_interfaces_history(self, from_bridges=False):
         if self.gui:
-            self.gui.info.line_add('Interface\'s history by host:', (2, 0), "top-left", self.gui.window)
+            if not from_bridges:
+                self.gui.info.line_add('Interface\'s history by host:', (2, 0), "top-left", self.gui.window)
+            else:
+                self.gui.info.line_add('Bridges history by host:', (2, 0), "top-left", self.gui.window)
         content = []
         for host in self.selected_hosts.values():
+            # some log lines might appear several times under different interfaces
+            # this is desired behaviour for now
             for interface in host.selected_interfaces:
+                logging.debug(interface.linux)
                 if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
+                if from_bridges:
+                    if interface.bridge and interface.bridge in host.selected_bridges:
+                        if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
+                    else:
+                        continue
                 for line in host.logs:
                     if 'intf' in line.data.keys():
                         if line.data['intf'] in [interface.linux, interface.sdk]:
                             content.append(self.__get_display_output_from_line(str(host.name), line, if_name))
                             self.current_log_buffer.append([line, host])
-        if self.cl_support:
+        if self.cl_support: 
+            # /!\ need to add bridge stuff
             host_name = str(self.cl_support.name)
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
@@ -435,7 +448,7 @@ class Master:
             print line
 
     def _display_interfaces_history(self):
-        for line in self._get_interfaces_history:
+        for line in self._get_interfaces_history():
             print line
 
     def _get_origin_file(self, label, log, host):
@@ -493,7 +506,14 @@ class Master:
                 self.set_selected_interfaces_for_hosts(req.field.input.split(), self.args.standalone)
                 if self.cl_support_archive:
                     self.set_selected_interfaces_for_clsupport(req.field.input.split())
-                content = self._get_interfaces_history
+                content = self._get_interfaces_history()
+            elif req.field.name == "bridge":
+                # this will select all interfaces for all given bridges
+                self.set_selected_bridges_for_hosts(req.field.input.split(), self.args.standalone)
+                # /!\ add cl-support function here...
+                # if self.cl_support_archive:
+                # get history for all interfaces on given bridges
+                content = self._get_interfaces_history(True)
             elif req.field.name == "grep":
                 content = self._get_history('History of grep pattern by host:', self._get_grep_history, req.field.input)
             elif req.field.name == "time":

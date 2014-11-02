@@ -30,6 +30,10 @@ class Gui:
         # Menu
         self.menu = Menu()
         # Add fields to the menu
+        line5 = Line("Find log info for this bridge:", (5, 0), "bottom-left", self.window)
+        item5 = Field(line5, 50, "bridge")
+        self.menu.add_field(item5)
+
         line1 = Line("Find log info for this grep pattern:", (4, 0), "bottom-left", self.window)
         item1 = Field(line1, 50, "grep")
         self.menu.add_field(item1)

@@ -15,6 +15,7 @@ class Interface:
         self.id = -1
         self.update(data)
         self.history = []
+        self.bridge = None
 
     def set_linux_id(self, linux):
         if self.linux == None:
@@ -29,6 +30,10 @@ class Interface:
     def set_ip(self, ip):
         if self.ip == None:
             self.ip = ip
+
+    def set_bridge(self, bridge):
+        if self.bridge == None:
+            self.bridge = bridge
 
     def update(self, data):
         self.set_linux_id(data.get('linux_interface'))
