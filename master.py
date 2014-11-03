@@ -512,6 +512,14 @@ class Master:
             content.append('[' + result[2] + '] ' + str(result[1]))
         return content, num_max
 
+    def add_bridge_tag(self, content, bridge):
+        result = []
+        for line in content:
+            ll = line.split(' ')
+            ll[0] += " [%s]" % bridge
+            result.append(' '.join(ll))
+        return result
+
     def analyse_gui_req(self, req):
         highlight = None
         num_max = None
@@ -525,12 +533,16 @@ class Master:
                     self.set_selected_interfaces_for_clsupport(req.field.input.split())
                 content = self._get_interfaces_history()
             elif req.field.name == "bridge":
+                content = []
+                # first add content from grepping bridges names
+                for name in req.field.input.split():
+                    content.extend(self.add_bridge_tag(self._get_history('', self._get_grep_history, name.split(':')[-1]), name.split(':')[-1]))
                 # this will select all interfaces for all given bridges
                 self.set_selected_bridges_for_hosts(req.field.input.split(), self.args.standalone)
                 if self.cl_support_archive:
                     self.set_selected_bridges_for_clsupport(req.field.input.split())
                 # get history for all interfaces on given bridges
-                content = self._get_interfaces_history(True)
+                content.extend(self._get_interfaces_history(True))
             elif req.field.name == "grep":
                 content = self._get_history('History of grep pattern by host:', self._get_grep_history, req.field.input)
             elif req.field.name == "time":
