@@ -13,6 +13,7 @@ class Interface:
         self.sdk = None
         self.ip = None
         self.id = None
+        self.vlan = None
         self.update(data)
         self.history = []
         self.bridge = None
@@ -32,6 +33,10 @@ class Interface:
             self.id = id
         return self
 
+    def set_vlan(self, vlan):
+        if self.vlan == None:
+            self.vlan = vlan
+
     def set_ip(self, ip):
         if self.ip == None:
             self.ip = ip
@@ -45,6 +50,7 @@ class Interface:
         self.set_sdk_id(data.get('sdk_interface'))
         self.set_ip(data.get('ip_interface'))
         self.set_id(data.get('id_interface'))
+        self.set_vlan(data.get('vlan_number'))
 
     def __str__(self):
         return str(self.linux) + ' ' + str(self.sdk) + ' ' + str(self.id)

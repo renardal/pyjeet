@@ -58,6 +58,7 @@ class LogContainer:
         files_info = self.get_interfaces_files(standalone)
         for info in files_info:
             for data in File(info['name'], info['content']).normalize(normalizer, is_log=False,debug_context=True).data:
+                logging.debug(data)
                 if not self.find_interface(data):
                     if not data.has_key('linux_interface'):
                         continue

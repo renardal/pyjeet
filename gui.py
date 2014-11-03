@@ -23,13 +23,17 @@ class Gui:
         self.window = curses.initscr()
         # Basic layout information
         self.info = Information()
-        self.info.line_add("Pyjeet version 1.0", (0, 0), "top-left", self.window)
+        self.info.line_add("Pyjeet version 2.5", (0, 0), "top-left", self.window)
         helpm = "Press the ? key for help"
         self.info.line_add(helpm, (0, len(helpm)), "top-right", self.window)
 
         # Menu
         self.menu = Menu()
         # Add fields to the menu
+        line6 = Line("Find log info for this vlan:", (6, 0), "bottom-left", self.window)
+        item6 = Field(line6, 50, "vlan")
+        self.menu.add_field(item6)
+
         line5 = Line("Find log info for this bridge:", (5, 0), "bottom-left", self.window)
         item5 = Field(line5, 50, "bridge")
         self.menu.add_field(item5)
@@ -448,7 +452,7 @@ class Body:
         # Information object
         self.info = info
         # Distance of info from bottom
-        self.info_y = 6
+        self.info_y = 8
         # position in the body
         self.pos = None
         #Create pad at the right size

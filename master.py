@@ -357,6 +357,37 @@ class Master:
         if callable(self.display_cb):
             self.display_cb()
 
+    def _get_vlan_history(self, vlan_id):
+        if self.gui:
+            self.gui.info.line_add('Vlan\'s history by host:', (2, 0), "top-left", self.gui.window)
+        content = []
+        for host in self.selected_hosts.values():
+            host.load_interfaces(self.normalizer, self.args.standalone)
+            for interface in host.interfaces:
+                logging.debug(interface.linux)
+                logging.debug(interface.vlan)
+                if_name = ' [' + str(interface.vlan) + '] [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' 
+                for line in host.logs:
+                    if 'intf' in line.data and line.data['intf'] in [interface.linux, interface.sdk]: 
+                        if interface.vlan == vlan_id:
+                            content.append(self.__get_display_output_from_line(str(host.name), line, if_name))
+                            self.current_log_buffer.append([line, host])
+        if self.cl_support: 
+            self.cl_support.load_interfaces(self.normalizer)
+            host_name = str(self.cl_support.name)
+            if not self.cl_support.logs:
+                content.append('\tNothing to display')
+            else:
+                for interface in self.cl_support.selected_interfaces:
+                    if_name = ' [' + str(interface.vlan) + '] [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' 
+                    for line in self.cl_support.logs:
+                        if 'intf' in line.data and line.data['intf'] in [interface.linux, interface.sdk]: 
+                            if interface.vlan == vlan_id:
+                                content.append(self.__get_display_output_from_line(host_name, line, if_name))
+                                self.current_log_buffer.append([line, self.cl_support])
+        return content
+
+
     def _get_interfaces_history(self, from_bridges=False):
         if self.gui:
             if not from_bridges:
@@ -368,7 +399,7 @@ class Master:
             # some log lines might appear several times under different interfaces
             # this is desired behaviour for now
             for interface in host.selected_interfaces:
-                if_name = ' [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
+                if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
                 if from_bridges:
                     if interface.bridge and interface.bridge in host.selected_bridges:
                         if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
@@ -380,13 +411,12 @@ class Master:
                             content.append(self.__get_display_output_from_line(str(host.name), line, if_name))
                             self.current_log_buffer.append([line, host])
         if self.cl_support: 
-            # /!\ need to add bridge stuff
             host_name = str(self.cl_support.name)
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
             else:
                 for interface in self.cl_support.selected_interfaces:
-                    if_name = ' [' + str(interface.linux) + '/' + str(interface.sdk) + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
+                    if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
                     if from_bridges:
                         if interface.bridge and interface.bridge in self.cl_support.selected_bridges:
                             if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
@@ -532,6 +562,8 @@ class Master:
                 if self.cl_support_archive:
                     self.set_selected_interfaces_for_clsupport(req.field.input.split())
                 content = self._get_interfaces_history()
+            elif req.field.name == "vlan":
+                content = self._get_vlan_history(req.field.input)
             elif req.field.name == "bridge":
                 content = []
                 # first add content from grepping bridges names
