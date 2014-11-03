@@ -58,9 +58,9 @@ class LogContainer:
         files_info = self.get_interfaces_files(standalone)
         for info in files_info:
             for data in File(info['name'], info['content']).normalize(normalizer, is_log=False,debug_context=True).data:
-                if not data.has_key('linux_interface'):
-                    continue
                 if not self.find_interface(data):
+                    if not data.has_key('linux_interface'):
+                        continue
                     self.interfaces.append(Interface(data))
         return self
 
@@ -101,7 +101,7 @@ class LogContainer:
             if sdk and interface.sdk == sdk:
                 interface.update(data)
                 return True
-            id = data.get('id')
+            id = data.get('id_interface')
             if id and interface.id == id:
                 interface.update(data)
                 return True

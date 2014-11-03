@@ -12,7 +12,7 @@ class Interface:
         self.linux = None
         self.sdk = None
         self.ip = None
-        self.id = -1
+        self.id = None
         self.update(data)
         self.history = []
         self.bridge = None
@@ -27,6 +27,11 @@ class Interface:
             self.sdk = sdk
         return self
 
+    def set_id(self, id):
+        if self.id == None:
+            self.id = id
+        return self
+
     def set_ip(self, ip):
         if self.ip == None:
             self.ip = ip
@@ -39,6 +44,7 @@ class Interface:
         self.set_linux_id(data.get('linux_interface'))
         self.set_sdk_id(data.get('sdk_interface'))
         self.set_ip(data.get('ip_interface'))
+        self.set_id(data.get('id_interface'))
 
     def __str__(self):
         return str(self.linux) + ' ' + str(self.sdk) + ' ' + str(self.id)

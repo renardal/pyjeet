@@ -368,7 +368,7 @@ class Master:
             # some log lines might appear several times under different interfaces
             # this is desired behaviour for now
             for interface in host.selected_interfaces:
-                if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
+                if_name = ' [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
                 if from_bridges:
                     if interface.bridge and interface.bridge in host.selected_bridges:
                         if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
@@ -376,7 +376,7 @@ class Master:
                         continue
                 for line in host.logs:
                     if 'intf' in line.data.keys():
-                        if line.data['intf'] in [interface.linux, interface.sdk]:
+                        if line.data['intf'] in [interface.linux, interface.sdk]: #or ('ip' in line.data and line.data['ip']==interface.ip):
                             content.append(self.__get_display_output_from_line(str(host.name), line, if_name))
                             self.current_log_buffer.append([line, host])
         if self.cl_support: 
@@ -386,7 +386,7 @@ class Master:
                 content.append('\tNothing to display')
             else:
                 for interface in self.cl_support.selected_interfaces:
-                    if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + ']'
+                    if_name = ' [' + str(interface.linux) + '/' + str(interface.sdk) + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
                     if from_bridges:
                         if interface.bridge and interface.bridge in self.cl_support.selected_bridges:
                             if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
@@ -394,7 +394,7 @@ class Master:
                             continue
                     for line in self.cl_support.logs:
                         if 'intf' in line.data.keys():
-                            if line.data['intf'] in [interface.linux, interface.sdk]:
+                            if line.data['intf'] in [interface.linux, interface.sdk]: #or ('ip' in line.data and line.data['ip']==interface.ip):
                                 content.append(self.__get_display_output_from_line(host_name, line, if_name))
                                 self.current_log_buffer.append([line, self.cl_support])
         return content

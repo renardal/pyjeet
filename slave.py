@@ -15,7 +15,7 @@ logging.basicConfig(filename='/var/log/pyjeet.log',level=logging.DEBUG)
 
 class Slave:
     BASE_DIRECTORY = ''
-    IPLINKSHOW_FILE = 'ip_link_show' 
+    IPLINKSHOW_FILE = '/var/log/ip_link_show' 
     BRCTLSHOW_FILE = '/var/log/brctl_show'
 
     def __init__(self, args):
