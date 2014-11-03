@@ -413,7 +413,7 @@ class Master:
 
     @staticmethod
     def _get_ip_history(line, pattern):
-        return 'ip' in line.data.keys() and pattern == line.data['ip']
+        return 'ip' in line.data.keys() and (pattern == line.data['ip'] or pattern == '')
 
     def _get_history(self, label, search_callback=None, *args):
         self.output_count = 0
