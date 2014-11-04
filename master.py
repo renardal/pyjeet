@@ -364,8 +364,6 @@ class Master:
         for host in self.selected_hosts.values():
             host.load_interfaces(self.normalizer, self.args.standalone)
             for interface in host.interfaces:
-                logging.debug(interface.linux)
-                logging.debug(interface.vlan)
                 if_name = ' [' + str(interface.vlan) + '] [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' 
                 for line in host.logs:
                     if 'intf' in line.data and line.data['intf'] in [interface.linux, interface.sdk]: 
@@ -399,10 +397,10 @@ class Master:
             # some log lines might appear several times under different interfaces
             # this is desired behaviour for now
             for interface in host.selected_interfaces:
-                if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
+                if_name = ' [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
                 if from_bridges:
                     if interface.bridge and interface.bridge in host.selected_bridges:
-                        if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
+                        if_name = ' [' + str(interface.bridge.name) + ']' + if_name
                     else:
                         continue
                 for line in host.logs:
@@ -416,10 +414,10 @@ class Master:
                 content.append('\tNothing to display')
             else:
                 for interface in self.cl_support.selected_interfaces:
-                    if_name = '[' + str(interface.linux) + '/' + str(interface.sdk) + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
+                    if_name = ' [' + str(interface.linux) + '/' + str(interface.sdk) + '/' + str(interface.id) + ']' #+ '/' + str(interface.ip) + ']'
                     if from_bridges:
                         if interface.bridge and interface.bridge in self.cl_support.selected_bridges:
-                            if_name = ' [' + str(interface.bridge.name) + '] ' + if_name
+                            if_name = '[' + str(interface.bridge.name) + '] ' + if_name
                         else:
                             continue
                     for line in self.cl_support.logs:
@@ -439,35 +437,59 @@ class Master:
 
     @staticmethod
     def _get_grep_history(line, pattern):
-        return 'raw' in line.data.keys() and pattern in line.data['raw']
+        if pattern:
+            return 'raw' in line.data.keys() and str(pattern) in line.data['raw'] and str(pattern) != ''
+        else:
+            return False
 
     @staticmethod
     def _get_ip_history(line, pattern):
-        return 'ip' in line.data.keys() and (pattern == line.data['ip'] or pattern == '')
+        if pattern or pattern == '':
+            return 'ip' in line.data.keys() and (str(pattern) == line.data['ip'] or str(pattern) == '')
+        else:
+            return False
 
-    def _get_history(self, label, search_callback=None, *args):
+    def _get_history(self, label, search_callback=None, args_list=None):
         self.output_count = 0
+        host_arg = None
+        cl_arg = None
         if self.gui:
             self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
         content = []
+        if args_list:
+            args = [a.split(':') for a in args_list if a]
+        else:
+            args = None
         for host in self.selected_hosts.values():
+            if args:
+                host_arg = self._get_list_for_host(None, host.name, args)
+            if host_arg and len(host_arg):
+                host_arg = host_arg[0] 
+            elif args is None:
+                host_arg = ''
             if not host.logs:
                 content.append('\tNothing to display')
             else:
                 for line in host.logs:
-                    if (search_callback and search_callback(line, *args)) or not search_callback:
+                    if (search_callback and search_callback(line, host_arg)) or not search_callback:
                         content.append(self.__get_display_output_from_line(str(host.name), line))
                         self.current_log_buffer.append([line, host])
                         self.output_count += 1
                         if self.output_count >= self.cap:
                             return content
         if self.cl_support:
+            if args:
+                cl_arg = self._get_list_for_clsupport(args)
+            if cl_arg and len(cl_arg):
+                cl_arg = cl_arg[0] 
+            elif args is None:
+                cl_arg = ''
             host_name = str(self.cl_support.name)
             if not self.cl_support.logs:
                 content.append('\tNothing to display')
             else:
                 for line in self.cl_support.logs:
-                    if (search_callback and search_callback(line, *args)) or not search_callback:
+                    if (search_callback and search_callback(line, cl_arg)) or not search_callback:
                         content.append(self.__get_display_output_from_line(host_name, line))
                         self.current_log_buffer.append([line, self.cl_support])
                         self.output_count += 1
@@ -568,7 +590,7 @@ class Master:
                 content = []
                 # first add content from grepping bridges names
                 for name in req.field.input.split():
-                    content.extend(self.add_bridge_tag(self._get_history('', self._get_grep_history, name.split(':')[-1]), name.split(':')[-1]))
+                    content.extend(self.add_bridge_tag(self._get_history('', self._get_grep_history, [name]), name.split(':')[-1]))
                 # this will select all interfaces for all given bridges
                 self.set_selected_bridges_for_hosts(req.field.input.split(), self.args.standalone)
                 if self.cl_support_archive:
@@ -576,12 +598,15 @@ class Master:
                 # get history for all interfaces on given bridges
                 content.extend(self._get_interfaces_history(True))
             elif req.field.name == "grep":
-                content = self._get_history('History of grep pattern by host:', self._get_grep_history, req.field.input)
+                if len(req.field.input.split()) == 0:
+                    content = self._get_history('History of grep pattern by host:')
+                else:
+                    content = self._get_history('History of grep pattern by host:', self._get_grep_history, req.field.input.split())
             elif req.field.name == "time":
                 content = self._get_history('History at given time by host:', self._get_time_history,
                                             *req.field.input.split('|'))
             elif req.field.name == "ip":
-                content = self._get_history('History of ip adresss by host:', self._get_ip_history, req.field.input)
+                content = self._get_history('History of ip adresss by host:', self._get_ip_history, req.field.input.split())
             else:
                 display = LogHistory
                 content = self._get_history('History by host:')

@@ -31,8 +31,8 @@ class LogContainer:
         #select user interfaces with user input in the loaded interfaces
         if not self.interfaces and normalizer:
             self.load_interfaces(normalizer)
-        #if no particular interface is chosen get them all
-        if not len(selected_interfaces):
+        #if no particular interface is chosen get them all on all keyword
+        if len(selected_interfaces) and "all" in selected_interfaces: 
             self.selected_interfaces = self.interfaces
         else:
             self.selected_interfaces = self.get_interfaces_from_names(selected_interfaces)
@@ -41,8 +41,8 @@ class LogContainer:
         #select bridges  with user input in the loaded bridges
         if not self.bridges:
             self.load_bridges(normalizer)
-        #if no particular bridge is chosen get them all
-        if not len(selected_bridges):
+        #if no particular bridge is chosen get them all on all keyword
+        if len(selected_bridges) and "all" in selected_bridges: 
             self.selected_bridges = self.bridges
         else:
             self.selected_bridges = self.get_bridges_from_names(selected_bridges)
