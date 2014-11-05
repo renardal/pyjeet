@@ -497,6 +497,37 @@ class Master:
                             return content
         return content
 
+    
+    def _get_history_time(self, label, search_callback=None, *args):
+        self.output_count = 0
+        if self.gui:
+            self.gui.info.line_add(label, (2, 0), "top-left", self.gui.window)
+        content = []
+        for host in self.selected_hosts.values():
+            if not host.logs:
+                content.append('\tNothing to display')
+            else:
+                for line in host.logs:
+                    if (search_callback and search_callback(line, *args)) or not search_callback:
+                        content.append(self.__get_display_output_from_line(str(host.name), line))
+                        self.current_log_buffer.append([line, host])
+                        self.output_count += 1
+                        if self.output_count >= self.cap:
+                            return content
+        if self.cl_support:
+            host_name = str(self.cl_support.name)
+            if not self.cl_support.logs:
+                content.append('\tNothing to display')
+            else:
+                for line in self.cl_support.logs:
+                    if (search_callback and search_callback(line, *args)) or not search_callback:
+                        content.append(self.__get_display_output_from_line(host_name, line))
+                        self.current_log_buffer.append([line, self.cl_support])
+                        self.output_count += 1
+                        if self.output_count >= self.cap:
+                            return content
+        return content
+
     def __get_display_output_from_line(self, host_name, line, interface='', line_number=''):
         if not self.verbose:
             output = ('[' + str(line.date) + '] ' + (
@@ -603,7 +634,7 @@ class Master:
                 else:
                     content = self._get_history('History of grep pattern by host:', self._get_grep_history, req.field.input.split())
             elif req.field.name == "time":
-                content = self._get_history('History at given time by host:', self._get_time_history,
+                content = self._get_history_time('History at given time by host:', self._get_time_history,
                                             *req.field.input.split('|'))
             elif req.field.name == "ip":
                 content = self._get_history('History of ip adresss by host:', self._get_ip_history, req.field.input.split())
@@ -624,7 +655,7 @@ class Master:
             elif req.operation == "context":
                 # flush current log buffer
                 self.current_log_buffer = []
-                content = self._get_history('History at given time by host:', self._get_time_history,
+                content = self._get_history_time('History at given time by host:', self._get_time_history,
                                             str(req.message))
                 display = LogHistory
             else:
