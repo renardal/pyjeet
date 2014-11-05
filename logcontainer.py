@@ -37,9 +37,9 @@ class LogContainer:
         else:
             self.selected_interfaces = self.get_interfaces_from_names(selected_interfaces)
 
-    def set_selected_bridges(self, selected_bridges):
+    def set_selected_bridges(self, selected_bridges, normalizer=None):
         #select bridges  with user input in the loaded bridges
-        if not self.bridges:
+        if not self.bridges and normalizer:
             self.load_bridges(normalizer)
         #if no particular bridge is chosen get them all on all keyword
         if len(selected_bridges) and "all" in selected_bridges: 

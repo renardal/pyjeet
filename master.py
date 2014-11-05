@@ -574,7 +574,7 @@ class Master:
         content = []
         time_slices = []
         num_max = 0
-        treshold = 0.7
+        treshold = 0.8
         time_span = 1000
         if not 'body' in log.data:
             return [], 0
@@ -620,8 +620,9 @@ class Master:
             elif req.field.name == "bridge":
                 content = []
                 # first add content from grepping bridges names
-                for name in req.field.input.split():
-                    content.extend(self.add_bridge_tag(self._get_history('', self._get_grep_history, [name]), name.split(':')[-1]))
+                if req.field.input != 'all':
+                    for name in req.field.input.split():
+                        content.extend(self.add_bridge_tag(self._get_history('', self._get_grep_history, [name]), name.split(':')[-1]))
                 # this will select all interfaces for all given bridges
                 self.set_selected_bridges_for_hosts(req.field.input.split(), self.args.standalone)
                 if self.cl_support_archive:
